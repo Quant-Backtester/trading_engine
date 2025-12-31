@@ -9,7 +9,7 @@ from events.enums import EventEnum
 
 
 @dataclass(frozen=True, slots=True)
-class Event[T: Eventpayload]:
+class Event:
     timestamp: Timestamp
     event_type: EventEnum
-    payload: T
+    payload: Eventpayload
