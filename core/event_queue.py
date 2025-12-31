@@ -1,8 +1,9 @@
+#STL
 import heapq
 from typing import NamedTuple
 
 # Custom
-from event import Event
+from events.event import Event
 
 
 class Entry(NamedTuple):

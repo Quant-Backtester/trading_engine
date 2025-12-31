@@ -1,5 +1,6 @@
 from enum import StrEnum, auto, unique
 
+
 @unique
 class EventEnum(StrEnum):
     MARKET_DATA = auto()

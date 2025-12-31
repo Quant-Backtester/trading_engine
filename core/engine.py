@@ -3,22 +3,23 @@ from collections import defaultdict
 from typing import Callable
 
 # Custom
-import event
-from common.enums import EventEnum
+import events.event as event
+from events.enums import EventEnum
 
 from .clock import Clock
 from .event_queue import EventQueue
 
 type Handler = Callable[[event.Event], None]
 
+
 class Engine:
     def __init__(self) -> None:
         self._queue = EventQueue()
         self._clock = Clock()
         self._running = False
-        self._handlers: defaultdict[
-            EventEnum, list[Handler]
-            ] = defaultdict(list)
+        self._handlers: defaultdict[EventEnum, list[Handler]] = defaultdict(
+            list
+        )
 
     def push_event(self, event: event.Event) -> None:
         self._queue.push(event=event)
@@ -31,7 +32,6 @@ class Engine:
     def get_handlers(self, event: EventEnum) -> list[Handler]:
         return self._handlers.get(event, [])
 
-
     def run(self) -> None:
         self._running = True
         while self._running and len(self._queue) > 0:
@@ -43,8 +43,7 @@ class Engine:
         self._running = False
 
     def _dispatch(self, event: event.Event) -> None:
-        handlers =self.get_handlers(event=event.event_type)
+        handlers: list[Handler] = self.get_handlers(event=event.event_type)
 
         for handler in handlers:
             handler(event)
-

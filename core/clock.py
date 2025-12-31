@@ -1,5 +1,3 @@
-
-
 class Clock:
     def __init__(self) -> None:
         self._time: int = 0

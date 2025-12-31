@@ -1,12 +1,12 @@
 # STL
 import unittest
 
-from common.enums import EventEnum
+from events.enums import EventEnum
 from common.payloads import TestingPayload
-from event import Event
+from events.event import Event
 
 # Custom
-from event_queue import EventQueue
+from core.event_queue import EventQueue
 
 
 class TestEventQueue(unittest.TestCase):

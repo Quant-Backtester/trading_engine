@@ -1,5 +1,5 @@
 import unittest
-from common.enums import EventEnum
+from events.enums import EventEnum
 
 
 class TestEventEnum(unittest.TestCase):

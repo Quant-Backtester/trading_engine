@@ -1,9 +1,11 @@
+# STL
 from dataclasses import dataclass
 
 # custom
-from common.enums import EventEnum
-from common.payloads import Eventpayload
+from payloads import Eventpayload
+
 from common.types import Timestamp
+from events.enums import EventEnum
 
 
 @dataclass(frozen=True, slots=True)
