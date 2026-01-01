@@ -1,15 +1,20 @@
 # STL
 from collections import defaultdict
-from typing import Callable
+from collections.abc import MutableSequence, MutableMapping, Callable
+import logging
 
 # Custom
 import events.event as event
 from events.enums import EventEnum
-
 from .clock import Clock
 from .event_queue import EventQueue
 
 type Handler = Callable[[event.Event], None]
+type Handlers = MutableSequence[Handler]
+type Dispatcher = MutableMapping[EventEnum, list[Handler]]
+
+
+logger = logging.getLogger("engine")
 
 
 class Engine:
@@ -17,9 +22,8 @@ class Engine:
         self._queue = EventQueue()
         self._clock = Clock()
         self._running = False
-        self._handlers: defaultdict[EventEnum, list[Handler]] = defaultdict(
-            list
-        )
+        self._handlers: Dispatcher = defaultdict(list)
+        logger.info("engine setup successfully")
 
     def push_event(self, event: event.Event) -> None:
         self._queue.push(event=event)
@@ -39,11 +43,19 @@ class Engine:
             self._clock.advance_to(timestamp=event.timestamp)
             self._dispatch(event=event)
 
+            logger.debug(
+                "Dispatching event: type=%s ts=%d",
+                event.event_type.name,
+                event.timestamp,
+            )
+
+        logger.debug("engine stopped")
+
     def stop(self) -> None:
         self._running = False
 
     def _dispatch(self, event: event.Event) -> None:
-        handlers: list[Handler] = self.get_handlers(event=event.event_type)
+        handlers: Handlers = self.get_handlers(event=event.event_type)
 
         for handler in handlers:
             handler(event)
