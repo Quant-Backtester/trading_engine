@@ -1,1 +1,2 @@
-from .source import MarketDataSource as MarketDataRSource
+from .source import MarketDataSource as MarketDataSource
+from .fake_source import FakeMarketDataSource as FakeMarketDataSource

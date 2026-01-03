@@ -20,8 +20,8 @@ logger = logging.getLogger("engine")
 
 class Engine:
     def __init__(self) -> None:
-        self._queue = EventQueue()
-        self._clock = Clock()
+        self._queue: EventQueue = EventQueue()
+        self._clock: Clock = Clock()
         self._running = False
         self._handlers: Dispatcher = defaultdict(list)
         self._strategies: list[Strategy] = []

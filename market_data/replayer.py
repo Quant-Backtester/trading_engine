@@ -2,24 +2,22 @@
 from dataclasses import dataclass
 
 # Custom
+from .sources import MarketDataSource
 from events.enums import EventEnum
 from events.payloads import MarketDataPayload
-from sources import MarketDataRSource
 from core.engine import Engine
 from events.event import Event
 
 
-class MarketPlayerReplayer:
-    def __init__(self, source: MarketDataRSource) -> None:
-        self._source: MarketDataRSource = source
+class MarketDataReplayer:
+    def __init__(self, source: MarketDataSource) -> None:
+        self._source: MarketDataSource = source
 
     def replay(self, engine: Engine) -> None:
         last_ts: int | None = None
 
         for record in self._source:
-            self.pass_market_data(
-                record=record, last_ts=last_ts, engine=engine
-            )
+            self.pass_market_data(record=record, last_ts=last_ts, engine=engine)
             last_ts = record.timestamp
 
     def pass_market_data(
@@ -42,10 +40,7 @@ class MarketPlayerReplayer:
 
         engine.push_event(event)
 
-
     @staticmethod
-    def _validate_ordering(
-        current_ts: int, last_ts: int | None
-    ) -> None:
+    def _validate_ordering(current_ts: int, last_ts: int | None) -> None:
         if last_ts is not None and current_ts < last_ts:
             raise ValueError("Market data out of order")
