@@ -8,6 +8,7 @@ import events.event as event
 from events.enums import EventEnum
 from .clock import Clock
 from .event_queue import EventQueue
+from strategies import Strategy
 
 type Handler = Callable[[event.Event], None]
 type Handlers = MutableSequence[Handler]
@@ -23,6 +24,7 @@ class Engine:
         self._clock = Clock()
         self._running = False
         self._handlers: Dispatcher = defaultdict(list)
+        self._strategies: list[Strategy] = []
         logger.info("engine setup successfully")
 
     def push_event(self, event: event.Event) -> None:
@@ -32,6 +34,9 @@ class Engine:
         self, event_type: EventEnum, handler: Callable[[event.Event], None]
     ) -> None:
         self._handlers[event_type].append(handler)
+
+    def register_strategy(self, strategy: Strategy) -> None:
+        self._strategies.append(strategy)
 
     def get_handlers(self, event: EventEnum) -> list[Handler]:
         return self._handlers.get(event, [])
@@ -49,6 +54,10 @@ class Engine:
                 event.timestamp,
             )
 
+            for strategy in self._strategies:
+                strategy.on_event(event)
+
+        self.stop()
         logger.debug("engine stopped")
 
     def stop(self) -> None:

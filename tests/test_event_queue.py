@@ -2,7 +2,7 @@
 import unittest
 
 from events.enums import EventEnum
-from common.payloads import TestingPayload
+from events.payloads import TestingPayload
 from events.event import Event
 
 # Custom

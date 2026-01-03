@@ -2,10 +2,10 @@
 from dataclasses import dataclass
 
 # custom
-from payloads import Eventpayload
+from .payloads import Eventpayload
 
 from common.types import Timestamp
-from events.enums import EventEnum
+from .enums import EventEnum
 
 
 @dataclass(frozen=True, slots=True)

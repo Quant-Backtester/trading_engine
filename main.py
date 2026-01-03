@@ -3,18 +3,18 @@ import logging
 
 
 #Custom
-from common.logging_config import setup_engine_logging
-from core.engine import Engine
+from core import setup_engine_logging, Engine
 
 
 
 def run_engine():
     setup_engine_logging()
+    logger = logging.getLogger(__name__)
     engine = Engine()
 
 
 
-    
+
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ class Clock:
         return self._time
 
     @now.setter
-    def now(self) -> None:
+    def now(self, new_value) -> None:
         raise AttributeError("time is read only")
 
     @now.deleter

@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from enums import Side
+from events.enums import Side
 
 from common.types import OrderId, Price, Quantity, Symbol
 

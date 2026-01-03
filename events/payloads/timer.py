@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from enums import TimerEnum
+from events.enums import TimerEnum
 
 from common.types import TimerId
 
