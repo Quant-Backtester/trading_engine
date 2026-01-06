@@ -1,7 +1,5 @@
 from .market_data import MarketDataPayload
-from .order_cancel import OrderCancelPayload
-from .order_fill import OrderFillPayload
-from .order_submit import OrderSubmitPayload
+from .order_payloads import OrderSubmitPayload, OrderPayload, OrderCancelPayload, OrderFillPayload
 from .test import TestingPayload
 from .timer import TimerPayload
 

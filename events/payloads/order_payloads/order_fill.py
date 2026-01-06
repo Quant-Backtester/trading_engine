@@ -7,4 +7,4 @@ from common.types import OrderId, Price, Quantity
 class OrderFillPayload:
     order_id: OrderId
     fill_price: Price
-    quantity: Quantity
+    fill_quantity: Quantity

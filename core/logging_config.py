@@ -34,12 +34,14 @@ class EngineJSONFormatter(logging.Formatter):
 
 def setup_engine_logging(
     level: int = logging.INFO,
-    log_dir: str = "logs",
+    dir_name: str = "logs",
 ) -> None:
-    Path(log_dir).mkdir(exist_ok=True)
+    dir_path = Path.cwd() / dir_name
+    dir_path.mkdir(exist_ok=True)
+
 
     handler = TimedRotatingFileHandler(
-        filename=f"{log_dir}/engine.jsonl",
+        filename=f"{dir_name}/engine.jsonl",
         when="midnight",
         interval=1,
         backupCount=14,
