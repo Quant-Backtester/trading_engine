@@ -1,12 +1,17 @@
-import tracemalloc
+from core import Engine
+import unittest
 
-tracemalloc.start()
 
-# ... run your application ...
 
-snapshot = tracemalloc.take_snapshot()
-top_stats = snapshot.statistics('lineno')
+class TestMemoryStability(unittest.TestCase):
+    def setUp(self) -> None:
+        self.engine = Engine()
 
-print("[ Top 10 ]")
-for stat in top_stats[:10]:
-    print(stat)
+    def test_engine_memory(self):
+        import tracemalloc
+        tracemalloc.start()
+
+        self.engine.run()
+
+        current, peak = tracemalloc.get_traced_memory()
+        self.assertLess(peak, 200 * 1024 * 1024)

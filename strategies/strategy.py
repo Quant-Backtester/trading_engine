@@ -7,6 +7,10 @@ class Strategy(ABC):
     def on_event(self, event: Event) -> None:
         pass
 
+    @abstractmethod
+    def on_order_fill(self, event: Event) -> None:
+        pass
+
 
 __all__ = (
     "Strategy",

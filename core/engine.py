@@ -13,6 +13,7 @@ from strategies import Strategy
 type Handler = Callable[[event.Event], None]
 type Handlers = MutableSequence[Handler]
 type Dispatcher = MutableMapping[EventEnum, list[Handler]]
+type Strategies = MutableSequence[Strategy]
 
 
 logger = logging.getLogger("engine")
@@ -22,17 +23,15 @@ class Engine:
     def __init__(self) -> None:
         self._queue: EventQueue = EventQueue()
         self._clock: Clock = Clock()
-        self._running = False
+        self._running: bool = False
         self._handlers: Dispatcher = defaultdict(list)
-        self._strategies: list[Strategy] = []
+        self._strategies: Strategies = []
         logger.info("engine setup successfully")
 
     def push_event(self, event: event.Event) -> None:
         self._queue.push(event=event)
 
-    def register_handler(
-        self, event_type: EventEnum, handler: Callable[[event.Event], None]
-    ) -> None:
+    def register_handler(self, event_type: EventEnum, handler: Handler) -> None:
         self._handlers[event_type].append(handler)
 
     def register_strategy(self, strategy: Strategy) -> None:
