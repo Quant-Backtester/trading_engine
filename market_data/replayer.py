@@ -1,5 +1,4 @@
 # STL
-from dataclasses import dataclass
 
 # Custom
 from .sources import MarketDataSource

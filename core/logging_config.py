@@ -2,10 +2,9 @@ import logging
 import json
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
-
-# Custom
 from typing import NotRequired, TypedDict
 
+# Custom
 
 class EngineLogRecord(TypedDict):
     timestamp: str
@@ -52,6 +51,5 @@ def setup_engine_logging(
 
     logger = logging.getLogger("engine")
     logger.setLevel(level)
-    logger.handlers.clear()
     logger.addHandler(handler)
     logger.propagate = False

@@ -1,7 +1,7 @@
 from .source import MarketDataSource
 
 
-class FakeMarketDataSource:
+class FakeMarketDataSource(MarketDataSource):
     def __init__(self, records):
         self._records = records
 

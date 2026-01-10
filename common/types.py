@@ -5,3 +5,5 @@ type Symbol = str
 type OrderId = int
 type Volume = int
 type TimerId = int
+type StrategyID = int
+type Cash = float

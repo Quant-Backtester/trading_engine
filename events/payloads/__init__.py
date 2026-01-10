@@ -10,4 +10,5 @@ type Eventpayload = (
     | TimerPayload
     | OrderCancelPayload
     | TestingPayload
+    | OrderPayload
 )

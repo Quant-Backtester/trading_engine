@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 
-from common.types import OrderId, Price, Quantity
+from common.types import Price, Quantity
+from .order import OrderPayload
 
 
 @dataclass(frozen=True, slots=True)
 class OrderFillPayload:
-    order_id: OrderId
+    order: OrderPayload
     fill_price: Price
     fill_quantity: Quantity

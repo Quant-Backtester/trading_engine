@@ -14,4 +14,5 @@ class TestMemoryStability(unittest.TestCase):
         self.engine.run()
 
         current, peak = tracemalloc.get_traced_memory()
+        
         self.assertLess(peak, 200 * 1024 * 1024)

@@ -15,3 +15,10 @@
 - internal timing logic
 - Used to mangage the order of event
 > Note that this Clock is logical time, not the wall-clock time
+
+
+### PositionManager
+- used to manage mutliple position for different stock (identify by their symbol)
+- Handle filling of position
+
+### 
