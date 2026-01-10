@@ -16,25 +16,23 @@ class MarketDataReplayer:
         last_ts: int | None = None
 
         for record in self._source:
-            self.pass_market_data(record=record, last_ts=last_ts, engine=engine)
+            self._emit_market_event(
+                record=record, last_ts=last_ts, engine=engine
+            )
             last_ts = record.timestamp
 
-    def pass_market_data(
-        self, record: MarketDataPayload, last_ts: int | None, engine: Engine
+    def _emit_market_event(
+        self,
+        record: MarketDataPayload,
+        last_ts: int | None,
+        engine: Engine,
     ) -> None:
         self._validate_ordering(current_ts=record.timestamp, last_ts=last_ts)
-
-        payload = MarketDataPayload(
-            symbol=record.symbol,
-            price=record.price,
-            volume=record.volume,
-            timestamp=record.timestamp,
-        )
 
         event = Event(
             timestamp=record.timestamp,
             event_type=EventEnum.MARKET_DATA,
-            payload=payload,
+            payload=record,
         )
 
         engine.push_event(event)

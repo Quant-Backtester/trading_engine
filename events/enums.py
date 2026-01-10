@@ -9,10 +9,12 @@ class EventEnum(StrEnum):
     ORDER_CANCEL = auto()
     TIMER = auto()
 
+
 @unique
 class Side(StrEnum):
     BUY = auto()
     SELL = auto()
+
 
 @unique
 class TimerEnum(StrEnum):

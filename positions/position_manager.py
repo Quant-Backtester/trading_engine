@@ -34,34 +34,37 @@ class PositionManager:
     def realized_pnl(self) -> Cash:
         return self._realized_pnl
 
+
     def on_fill(self, fill: OrderFillPayload) -> None:
         order: OrderPayload = fill.order
         symbol = order.symbol
-        fill_qty = fill.fill_quantity
-        fill_price = fill.fill_price
+        qty = fill.fill_quantity
+        price = fill.fill_price
 
-        signed_qty = fill_qty if order.side == Side.BUY else -fill_qty
+        assert qty > 0
+        assert price > 0
+        assert isinstance(order.side, Side)
 
-        pos = self._set_new_position(symbol=symbol)
+        signed_qty = qty if order.side == Side.BUY else -qty
 
-        if (
-            pos.quantity == 0
-            or (pos.quantity > 0 and signed_qty > 0)
-            or (pos.quantity < 0 and signed_qty < 0)
-        ):
+        pos = self._set_new_position(symbol)
+
+        # Same direction or opening (no pnl update as it is the same direction)
+        if pos.quantity == 0 or pos.quantity * signed_qty > 0:
             new_qty = pos.quantity + signed_qty
             pos.avg_price = (
-                pos.avg_price * abs(pos.quantity) + fill_price * abs(signed_qty)
+                pos.avg_price * abs(pos.quantity) + price * abs(signed_qty)
             ) / abs(new_qty)
             pos.quantity = new_qty
 
+        # Reduce or flip (updating pnl in this case)
         else:
             closing_qty = min(abs(pos.quantity), abs(signed_qty))
-            pnl = (
-                closing_qty
-                * (fill_price - pos.avg_price)
-                * (1 if pos.quantity > 0 else -1)
-            )
+
+            pnl = closing_qty * (price - pos.avg_price)
+            if pos.quantity < 0:
+                pnl = -pnl
+
             self._realized_pnl += pnl
 
             pos.quantity += signed_qty
@@ -69,6 +72,12 @@ class PositionManager:
             if pos.quantity == 0:
                 pos.avg_price = 0.0
             else:
-                pos.avg_price = fill_price
+                pos.avg_price = price
 
-        self._cash -= signed_qty * fill_price
+        # Cash update (explicit)
+        trade_value = qty * price
+        if order.side == Side.BUY:
+            self._cash -= trade_value
+        else:
+            self._cash += trade_value
+
