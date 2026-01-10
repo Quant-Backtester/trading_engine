@@ -8,8 +8,8 @@ import events.event as event
 from events.enums import EventEnum
 from .clock import Clock
 from .event_queue import EventQueue
+from .position_manager import PositionManager
 from strategies import Strategy
-from positions.position_manager import PositionManager
 from common.types import StrategyID
 
 type Handler = Callable[[event.Event], None]
