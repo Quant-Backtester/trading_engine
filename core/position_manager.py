@@ -1,7 +1,8 @@
 # STL
 from collections.abc import MutableMapping
+from operator import pos
 
-from events.payloads import OrderPayload, OrderFillPayload
+from events.payloads import OrderPayload, OrderFillPayload, MarketDataPayload
 from common.types import OrderId, Price, Symbol, Cash, Quantity
 from .position import Position
 from events.enums import Side
@@ -27,6 +28,14 @@ class PositionManager:
         self._positions[symbol] = pos
         return self._positions[symbol]
 
+
+    def on_market_data(self, md: MarketDataPayload) -> None:
+        pos = self._positions.get(md.symbol)
+        if pos is None:
+            return
+
+        pos.last_price = md.price
+
     @property
     def cash(self) -> Cash:
         return self._cash
@@ -37,7 +46,7 @@ class PositionManager:
 
     @property
     def unrealized_pnl(self) -> Cash:
-        return self.unrealized_pnl
+        return sum( pos.unrealized_pnl for pos in self._positions.values())
 
     @staticmethod
     def _validate_fill(fill: OrderFillPayload) -> None:
@@ -123,6 +132,11 @@ class PositionManager:
             # Flipped
             pos.quantity = new_qty
             pos.avg_price = price
+
+    def calculate_unrealized_pnl(self) -> None:
+        for symbol, position in self._positions.items():
+
+
 
     def on_fill(self, fill: OrderFillPayload) -> None:
         self._validate_fill(fill=fill)
