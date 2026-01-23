@@ -16,7 +16,17 @@ class Position:
     def unrealized_pnl(self) -> Cash:
         if self.quantity == 0 or self.last_price is None:
             return 0.0
-        return self.quantity * (self.last_price - self.avg_price)
+
+        calculate_unrealized_pnl = (
+            lambda quantity, last_price, avg_price: quantity
+            * (last_price - avg_price)
+        )
+
+        return calculate_unrealized_pnl(
+            quantity=self.quantity,
+            last_price=self.last_price,
+            avg_price=self.avg_price,
+        )
 
     @property
     def change_in_percentage(self) -> Percentage:
@@ -26,5 +36,7 @@ class Position:
             or self.avg_price == 0.0
         ):
             return 0.0
-        return (self.last_price - self.avg_price) // self.avg_price
 
+        calculate_percentage = lambda x, y: (x - y) / y
+
+        return calculate_percentage(x=self.last_price, y=self.avg_price)

@@ -4,15 +4,16 @@ from collections.abc import MutableSequence, MutableMapping, Callable
 import logging
 
 # Custom
-import events.event as event
+from events.event import Event
 from events.enums import EventEnum
 from .clock import Clock
 from .event_queue import EventQueue
-from .position_manager import PositionManager
+from .portfolio import Portfolio
 from strategies import Strategy
-from common.types import StrategyID
+from common.types import StrategyID, Cash
 
-type Handler = Callable[[event.Event], None]
+
+type Handler = Callable[[Event], None]
 type Handlers = MutableSequence[Handler]
 type Dispatcher = MutableMapping[EventEnum, Handlers]
 type Strategies = MutableMapping[StrategyID, Strategy]
@@ -22,22 +23,23 @@ logger: logging.Logger = logging.getLogger("engine")
 
 
 class Engine:
-    def __init__(self) -> None:
-        self._setup()
+    def __init__(self, initial_cash: Cash = 100000) -> None:
+        self._initial_cash = initial_cash
+        self._setup(initial_cash)
         logger.info("engine setup successfully")
 
-    def _setup(self) -> None:
+    def _setup(self, initial_cash: Cash) -> None:
         self._queue: EventQueue = EventQueue()
         self._clock: Clock = Clock()
         self._handlers: Dispatcher = defaultdict(list)
         self._strategies: Strategies = {}
-        self.position_manager: PositionManager = PositionManager()
+        self._portfolio = Portfolio(initial_cash=initial_cash)
 
     def reset(self) -> None:
-        self._setup()
+        self._setup(initial_cash=self._initial_cash)
         logger.info("reset sucessfully")
 
-    def push_event(self, event: event.Event) -> None:
+    def push_event(self, event: Event) -> None:
         self._queue.push(event=event)
 
     def register_handler(self, event_type: EventEnum, handler: Handler) -> None:
@@ -82,7 +84,7 @@ class Engine:
         self._running = False
         logger.debug("engine stopped")
 
-    def _dispatch(self, event: event.Event) -> None:
+    def _dispatch(self, event: Event) -> None:
         handlers: Handlers = self.get_handlers(event=event.event_type)
 
         for handler in handlers:

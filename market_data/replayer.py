@@ -16,6 +16,7 @@ class MarketDataReplayer:
         self._source: MarketDataSource = source
 
     def replay(self, engine: Engine) -> None:
+        """ replay all the market events """
         last_ts: int | None = None
 
         for record in self._source:

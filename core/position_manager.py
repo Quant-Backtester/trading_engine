@@ -1,9 +1,10 @@
 # STL
 from collections.abc import MutableMapping
-from operator import pos
 
-from events.payloads import OrderPayload, OrderFillPayload, MarketDataPayload
-from common.types import OrderId, Price, Symbol, Cash, Quantity
+
+# Custom
+from events.payloads import OrderFillPayload, MarketDataPayload
+from common.types import Price, Symbol, Cash, Quantity
 from .position import Position
 from events.enums import Side
 
@@ -11,11 +12,10 @@ type Positions = MutableMapping[Symbol, Position]
 
 
 class PositionManager:
-    def __init__(self, initial_cash: float = 0.0) -> None:
+    def __init__(self, initial_cash: Cash = 0.0) -> None:
         self._positions: Positions = {}
         self._cash: Cash = initial_cash
         self._realized_pnl: Cash = 0.0
-        self._unrealized_pnl: Cash = 0.0
 
     def get_position(self, symbol: Symbol) -> Position | None:
         return self._positions.get(symbol)
@@ -27,7 +27,6 @@ class PositionManager:
         pos = Position(symbol=symbol)
         self._positions[symbol] = pos
         return self._positions[symbol]
-
 
     def on_market_data(self, md: MarketDataPayload) -> None:
         pos = self._positions.get(md.symbol)
@@ -45,8 +44,8 @@ class PositionManager:
         return self._realized_pnl
 
     @property
-    def unrealized_pnl(self) -> Cash:
-        return sum( pos.unrealized_pnl for pos in self._positions.values())
+    def total_unrealized_pnl(self) -> Cash:
+        return sum(pos.unrealized_pnl for pos in self._positions.values())
 
     @staticmethod
     def _validate_fill(fill: OrderFillPayload) -> None:
@@ -132,11 +131,6 @@ class PositionManager:
             # Flipped
             pos.quantity = new_qty
             pos.avg_price = price
-
-    def calculate_unrealized_pnl(self) -> None:
-        for symbol, position in self._positions.items():
-
-
 
     def on_fill(self, fill: OrderFillPayload) -> None:
         self._validate_fill(fill=fill)

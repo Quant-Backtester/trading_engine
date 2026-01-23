@@ -3,7 +3,7 @@ import unittest
 # Custom imports (adjust paths as needed)
 from core.position_manager import PositionManager
 from core.position import Position
-from events.payloads import OrderPayload, OrderFillPayload
+from events.payloads import OrderPayload, OrderFillPayload, MarketDataPayload
 from events.enums import Side
 
 
@@ -144,6 +144,34 @@ class TestPositionManager(unittest.TestCase):
 
         # Cash: +2000 - 2700
         self.assertEqual(self.pm.cash, 9_300.0)
+
+    def test_gain(self):
+        self._buy(15, 200)
+        self._sell(15, 201)
+
+        self.assertEqual(self.pm.cash, 10015)
+        self.assertEqual(self.pm.realized_pnl, 15)
+
+    def test_lost(self):
+        self._buy(15,200)
+        self._sell(15,199)
+
+        self.assertEqual(self.pm.cash, 9985)
+        self.assertEqual(self.pm.realized_pnl, -15)
+
+    def test_unrealized_pnl_buy(self):
+        self._buy(10, 200)
+
+        update = MarketDataPayload(symbol="AAPL",timestamp=1, price=210, volume=10000)
+        self.pm.on_market_data(update)
+        self.assertEqual(self.pm.total_unrealized_pnl, 100)
+
+    def test_unrealized_pnl_sell(self):
+        self._sell(10, 200)
+
+        update = MarketDataPayload(symbol="AAPL",timestamp=1, price=190, volume=10000)
+        self.pm.on_market_data(update)
+        self.assertEqual(self.pm.total_unrealized_pnl, 100)
 
 
 if __name__ == "__main__":

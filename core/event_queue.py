@@ -1,4 +1,4 @@
-#STL
+# STL
 import heapq
 from typing import NamedTuple
 from collections.abc import MutableSequence
@@ -8,7 +8,6 @@ from events.event import Event
 
 
 class Entry(NamedTuple):
-    timstamp: int
     sequence: int
     event: Event
 
@@ -31,9 +30,7 @@ class EventQueue:
         raise AttributeError("sequence_number cannot be deleted")
 
     def push(self, event: Event) -> None:
-        entry = Entry(
-            timstamp=event.timestamp, sequence=self._sequence, event=event
-        )
+        entry = Entry(sequence=self._sequence, event=event)
         heapq.heappush(self._heap, entry)
         self._sequence += 1
 
@@ -57,3 +54,6 @@ class EventQueue:
 
     def __len__(self) -> int:
         return len(self._heap)
+
+    def clear(self) -> None:
+        self._heap.clear()
