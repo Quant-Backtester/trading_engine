@@ -1,6 +1,7 @@
 # STL
 import logging
 from dataclasses import dataclass
+from collections.abc import Iterator
 
 # external
 
@@ -17,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class MarketDataReplayer:
-    def __init__(self, chunk_size: int = 10000) -> None:
+    def __init__(self, chunk_size: int = 150) -> None:
         self._source: MarketDataSource | None = None
         self._chunk_size: int = chunk_size
 
@@ -28,34 +29,30 @@ class MarketDataReplayer:
     def _replay_in_chunk(self, engine: Engine) -> None:
         self.check_source()
 
-        chunk_buffer: list[MarketDataPayload] = []
-        last_ts: int | None = None
-        chunk_number = 0
+        for chunk, chunk_num in self._generate_chunks():
+            self._process_chunk(engine, chunk, chunk_num)
 
+    def _generate_chunks(self) -> Iterator[tuple[list[MarketDataPayload], int]]:
+        buffer = []
+        chunk_num = 0
+        last_ts = None
         for record in self._source:  # type: ignore
-            self._validate_ordering(
-                current_ts=record.timestamp, last_ts=last_ts
-            )
+            self._validate_ordering(record.timestamp, last_ts)
             last_ts = record.timestamp
 
-            chunk_buffer.append(record)
+            buffer.append(record)
 
-            if len(chunk_buffer) >= self._chunk_size:
-                self._process_chunk(
-                    engine=engine, chunk=chunk_buffer, chunk_number=chunk_number
-                )
-                chunk_buffer = []
-                chunk_number += 1
+            if len(buffer) >= self._chunk_size:
+                yield buffer, chunk_num
+                buffer = []
+                chunk_num += 1
 
-        if chunk_buffer:
-            self._process_chunk(
-                engine=engine, chunk=chunk_buffer, chunk_number=chunk_number
-            )
+        if buffer:
+            yield buffer, chunk_num
 
     def _process_chunk(
         self, engine: Engine, chunk: list[MarketDataPayload], chunk_number: int
     ) -> None:
-        """Process a single chunk of market data"""
         logger.info(
             "Processing chunk %d with %d records", chunk_number, len(chunk)
         )
