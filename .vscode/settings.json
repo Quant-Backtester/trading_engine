@@ -1,3 +1,21 @@
 {
-  "python.REPL.enableREPLSmartSend": false
+  "python.REPL.enableREPLSmartSend": false,
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Python Debugger",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${file}",
+        "console": "integratedTerminal",
+        "args": [ "--cash", "100000", "csv", "--path", "./data/TSLA.csv"  ],
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder} ${env:PYTHONPATH}"
+        }
+      }
+    ],
+    "compounds": []
+  }
 }

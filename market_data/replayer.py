@@ -14,7 +14,7 @@ from core.engine import Engine
 from events.event import Event
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("engine")
 
 
 class MarketDataReplayer:
@@ -27,7 +27,6 @@ class MarketDataReplayer:
             raise ValueError("Source is None")
 
     def _replay_in_chunk(self, engine: Engine) -> None:
-        self.check_source()
 
         for chunk, chunk_num in self._generate_chunks():
             self._process_chunk(engine, chunk, chunk_num)

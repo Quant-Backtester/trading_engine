@@ -42,7 +42,7 @@ def setup_engine_logging(
     handler = TimedRotatingFileHandler(
         filename=f"{dir_name}/engine.jsonl",
         when="midnight",
-        interval=1,
+        interval=10,
         backupCount=14,
         encoding="utf-8",
     )
