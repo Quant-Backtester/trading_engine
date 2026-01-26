@@ -1,7 +1,7 @@
 # STL
 import unittest
 
-from events.enums import EventEnum
+from common.enums import EventEnum
 from events.payloads import TestingPayload
 from events.event import Event
 

@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from events.enums import TimerEnum
-
+# Custom
+from common.enums import TimerEnum
 from common.types import TimerId
 
 

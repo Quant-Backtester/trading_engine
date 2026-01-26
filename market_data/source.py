@@ -1,7 +1,7 @@
 # STL
 from os import PathLike
 from pathlib import Path
-from typing import Protocol, TextIO
+from typing import Protocol, TextIO, runtime_checkable
 from collections.abc import Iterator, Iterable
 import csv
 from datetime import datetime
@@ -11,6 +11,8 @@ from events.payloads import MarketDataPayload, MarketDataTestPayload, MarketData
 
 
 class SourceReprMixin:
+    __slots__ = ()
+
     def __str__(self) -> str:
         return self.__class__.__name__
 
@@ -18,11 +20,16 @@ class SourceReprMixin:
         return f"<{self.__class__}>"
 
 
+@runtime_checkable
 class MarketDataSource[T: MarketData](Protocol):
+    __slots__ = ()
+
     def __iter__(self) -> Iterator[T]: ...
 
 
 class FakeMarketDataSource(SourceReprMixin, MarketDataSource):
+    __slots__ = ("_records",)
+
     def __init__(self, records):
         self._records: Iterable = records
 
@@ -31,6 +38,8 @@ class FakeMarketDataSource(SourceReprMixin, MarketDataSource):
 
 
 class CSVMarketDataSource(SourceReprMixin, MarketDataSource):
+    __slots__ = "_path", "_symbol"
+
     def __init__(self, path: str | PathLike[str]) -> None:
         self._path = Path(path)
         self._symbol = self._path.stem
@@ -73,4 +82,8 @@ class CSVMarketDataSource(SourceReprMixin, MarketDataSource):
 
 
 class DBMarketDataSource(SourceReprMixin, MarketDataSource):
+    pass
+
+
+class JsonMarketDataSource(SourceReprMixin, MarketDataPayload):
     pass

@@ -11,6 +11,7 @@ from common.enums import Side
 
 type Openings = MutableMapping[OrderId, OrderSubmitPayload]
 
+
 @dataclass(slots=True)
 class PortfolioMetrics:
     total_return: Cash
@@ -30,14 +31,9 @@ class Portfolio:
         self.daily_returns: list[float] = []
         self.metrics = None
 
-    
-
-
-
-
     @property
     def total_pnl(self) -> Cash:
         return (
-            self._position_manager.realized_pnl +
-            self._position_manager.total_unrealized_pnl
+            self._position_manager.realized_pnl
+            + self._position_manager.total_unrealized_pnl
         )

@@ -6,6 +6,7 @@ from typing import NotRequired, TypedDict
 
 # Custom
 
+
 class EngineLogRecord(TypedDict):
     timestamp: str
     level: str
@@ -31,13 +32,13 @@ class EngineJSONFormatter(logging.Formatter):
 
         return json.dumps(log_object, ensure_ascii=False)
 
+
 def setup_engine_logging(
     level: int = logging.INFO,
     dir_name: str = "logs",
 ) -> None:
     dir_path = Path.cwd() / dir_name
     dir_path.mkdir(exist_ok=True)
-
 
     handler = TimedRotatingFileHandler(
         filename=f"{dir_name}/engine.jsonl",
