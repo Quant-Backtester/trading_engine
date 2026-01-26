@@ -4,7 +4,7 @@ import unittest
 from core.position_manager import PositionManager
 from core.position import Position
 from events.payloads import OrderPayload, OrderFillPayload, MarketDataPayload
-from events.enums import Side
+from common.enums import Side
 
 
 class TestPositionManager(unittest.TestCase):

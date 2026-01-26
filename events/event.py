@@ -5,8 +5,7 @@ from dataclasses import dataclass
 from .payloads import Eventpayload
 
 from common.types import Timestamp
-from .enums import EventEnum
-
+from common.enums import EventEnum
 
 @dataclass(frozen=True, slots=True)
 class Event:

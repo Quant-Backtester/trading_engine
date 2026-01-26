@@ -1,15 +1,33 @@
 # STL
-from collections.abc import Iterator, Generator
-from pathlib import Path
-import csv
-from typing import TextIO
-from datetime import datetime, timedelta
 from os import PathLike
-
+from pathlib import Path
+from typing import Protocol, TextIO
+from collections.abc import Iterator, Iterable
+import csv
+from datetime import datetime
 
 # Custom
-from events.payloads import MarketDataPayload, MarketDataTestPayload
-from .source import SourceReprMixin, MarketDataSource
+from events.payloads import MarketDataPayload, MarketDataTestPayload, MarketData
+
+
+class SourceReprMixin:
+    def __str__(self) -> str:
+        return self.__class__.__name__
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__}>"
+
+
+class MarketDataSource[T: MarketData](Protocol):
+    def __iter__(self) -> Iterator[T]: ...
+
+
+class FakeMarketDataSource(SourceReprMixin, MarketDataSource):
+    def __init__(self, records):
+        self._records: Iterable = records
+
+    def __iter__(self):
+        return iter(self._records)
 
 
 class CSVMarketDataSource(SourceReprMixin, MarketDataSource):
@@ -52,3 +70,7 @@ class CSVMarketDataSource(SourceReprMixin, MarketDataSource):
         # Convert to YYYYMMDD integer
         date_int = int(dt.strftime("%Y%m%d"))
         return date_int
+
+
+class DBMarketDataSource(SourceReprMixin, MarketDataSource):
+    pass

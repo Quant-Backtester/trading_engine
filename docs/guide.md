@@ -8,6 +8,7 @@ These guidelines apply to all code under:
 - `events/`
 - `market_data/`
 - `strategy/`
+- `handlers/`
 
 The primary goals are:
 
@@ -27,7 +28,7 @@ The primary goals are:
    Dependencies must flow in this direction only:
 
    ```
-   market_data → events → engine → strategy
+   market_data → events → engine → handler + strategy
    ```
 
    No reverse imports.
@@ -59,22 +60,18 @@ The primary goals are:
 ### 4. Event design rules
 
 1. **Events are immutable:**
-
    - Events and payloads must be `@dataclass(frozen=True, slots=True)`.
    - `slots` is used to optimize memory usage and speed up attribute access in object instances.
    - `frozen` make the class immutable.
 
 2. **No logic in events:**
-
    - Events contain data only.
 
 3. **Payloads are typed:**
-
    - Use dataclasses or typed dictionaries. Avoid raw `dict`.
 
 4. **EventEnum is exhaustive:**
    Adding a new event type requires:
-
    - Enum entry
    - Engine handler
    - Test
@@ -103,15 +100,13 @@ The primary goals are:
 ### 6. EventQueue rules
 
 1. **Priority queue only**
-
    - FIFO queues are forbidden.
 
 2. **Ordering key**
-
    - `(timestamp, sequence_number)`
 
 3. **No blocking or concurrency assumptions**
-
+   -
    - Single-threaded only.
 
 4. **Queue underflow is an error**
@@ -121,15 +116,13 @@ The primary goals are:
 ### 7. Market data replay rules
 
 1. **Replayer is read-only**
-
    - It does not mutate engine state directly.
+   - but running, or adding things to the engine is allowed
 
 2. **Replay validates ordering**
-
    - Out-of-order data must raise.
 
 3. **No clock manipulation**
-
    - Timestamps are passed through untouched.
 
 4. **One responsibility: data → events**
@@ -139,11 +132,9 @@ The primary goals are:
 ### 8. Strategy rules
 
 1. **Strategies are passive**
-
    - They react to events; they do not control time.
 
 2. **No I/O inside strategies**
-
    - No file access, network, or database calls.
 
 3. **Strategies emit intents, not actions**
@@ -154,9 +145,7 @@ The primary goals are:
 ### 9. Logging rules
 
 1. **Use the engine logger only**
-
    - `logging.getLogger("engine")`
-   - or use `logging.getLogger(__name__)` for modules
 
 2. **Log state transitions, not data streams**
 
@@ -169,11 +158,9 @@ The primary goals are:
 ### 10. Testing rules
 
 1. **Every component has unit tests**
-
    - Clock, queue, replayer, engine.
 
 2. **Tests must be deterministic**
-
    - No randomness without fixed seeds.
 
 3. **Invariant violation tests are required**
@@ -181,12 +168,14 @@ The primary goals are:
 4. **No mocking the engine core**
    - Prefer fake implementations.
 
+5. **Coverage**
+   - goal is to have 100% coverage. 
+
 ---
 
 ### 11. Type and style rules
 
 1. **Type hints are mandatory**
-
    - Public methods must be fully typed.
 
 2. **Use `Literal` or `Enum`, not magic strings**
@@ -194,6 +183,8 @@ The primary goals are:
 3. **Prefer composition over inheritance**
 
 4. **Explicit is better than clever**
+
+5. **Use custom type for inner logic**
 
 ---
 
@@ -229,19 +220,38 @@ Before committing, verify:
 
 ---
 
-### 15. `Others rules`
-  - if you need >=3 nesting for a single function, then you need to break down your code to new function. In other words, function should not be deeply nested.
-  - always use type hinting for function return and arguments, and whenever you think make the code more clean
-  - If you need to construct a dict with specific fixed structure, use a `TypedDict`
-  - If you need to create a tuple with specific fixed structure, use a `NamedTuple`
-  - when you have a fixed, small set of named constant and they are related. And they are important constant that will require more runtime checking, use a `StrEnum` or `IntEnum` whatever one is applicable for your use case.
-  - if the type is shortlive, and don't requrie runtime checking, use `type`
-    - eg:
-    ```py
-    from typing import Literal
+### 15. `Others recommendation`
 
-    type Side = Literal["BUY" | "SELL"]
-    ```
+- if you need >=3 nesting for a single function, then you need to break down your code to new function. In other words, function should not be deeply nested.
+- always use type hinting for function return and arguments, and whenever you think make the code more clean
+- If you need to construct a dict with specific fixed structure, use a `TypedDict`
+- If you need to create a tuple with specific fixed structure, use a `NamedTuple`
+- when you have a fixed, small set of named constant and they are related. And they are important constant that will require more runtime checking, use a `StrEnum` or `IntEnum` whatever one is applicable for your use case.
+- if the type is shortlive, and don't requrie runtime checking, use python custom `type` definiton
+  - eg:
+
+  ```py
+  from typing import Literal
+
+  type Side = Literal["BUY" | "SELL"]
+  ```
+
+  -eg2:
+  ```py
+  from enum import StrEnum, auto, unique
+
+  @unique
+  class HttpRequest(StrEnum):
+    GET = auto()
+    POST = auto()
+    PUT = auto()
+    DELETE = auto()
+    PATCH = auto()
+    OPTION = auto()
+    ...
+  ```
+
+
 ### Final note
 
 This engine is a **simulation kernel**, not an application.

@@ -6,7 +6,7 @@ from argparse import _SubParsersAction
 # Custom
 from core import setup_engine_logging, Engine
 from market_data.replayer import MarketDataReplayer
-from market_data.sources import CSVMarketDataSource
+from market_data import CSVMarketDataSource
 
 
 def config_csv_parser(

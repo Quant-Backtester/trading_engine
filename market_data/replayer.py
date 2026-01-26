@@ -7,8 +7,8 @@ from collections.abc import Iterator
 
 
 # Custom
-from .sources import MarketDataSource
-from events.enums import EventEnum
+from .source import MarketDataSource
+from common.enums import EventEnum
 from events.payloads import MarketDataPayload
 from core.engine import Engine
 from events.event import Event

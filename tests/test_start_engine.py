@@ -4,8 +4,8 @@ from core.engine import Engine
 from market_data.replayer import MarketDataReplayer
 from events.event import Event
 from events.payloads import MarketDataPayload
-from events.enums import EventEnum
-from market_data.sources import FakeMarketDataSource
+from common.enums import EventEnum
+from market_data import FakeMarketDataSource
 from strategies import DummyStrategy
 
 
@@ -21,7 +21,8 @@ class TestName(unittest.TestCase):
         ]
 
         source = FakeMarketDataSource(records)
-        replayer = MarketDataReplayer(source)
+        replayer = MarketDataReplayer()
+        replayer.set_market_data_source(source=source)
         engine = Engine()
 
         strategy = DummyStrategy()

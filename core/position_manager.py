@@ -6,7 +6,7 @@ from collections.abc import MutableMapping
 from events.payloads import OrderFillPayload, MarketDataPayload
 from common.types import Price, Symbol, Cash, Quantity
 from .position import Position
-from events.enums import Side
+from common.enums import Side
 
 type Positions = MutableMapping[Symbol, Position]
 

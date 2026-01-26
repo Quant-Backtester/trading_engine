@@ -5,7 +5,7 @@ import logging
 
 # Custom
 from events.event import Event
-from events.enums import EventEnum
+from common.enums import EventEnum
 from .clock import Clock
 from .event_queue import EventQueue
 from .portfolio import Portfolio

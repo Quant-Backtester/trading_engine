@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from common.types import Cash, OrderId, Price, Symbol, Quantity, Percentage
 from .position_manager import PositionManager
 from events.payloads import OrderSubmitPayload, OrderPayload, OrderFillPayload
-from events.enums import Side
+from common.enums import Side
 
 
 type Openings = MutableMapping[OrderId, OrderSubmitPayload]

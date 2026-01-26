@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 
 # Custom
-from events.enums import Side
+from common.enums import Side
 from common.types import OrderId, Symbol, Quantity, Price
 
 
