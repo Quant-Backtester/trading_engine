@@ -44,7 +44,7 @@ def config_engine_argument(
 
 def run_engine() -> None:
     """later on, the engine can be running in the memory (redis/vulkey)"""
-    setup_engine_logging()
+    setup_engine_logging(level=logging.INFO)
     parser = argparse.ArgumentParser()
 
     config_engine_argument(parser=parser)
@@ -58,12 +58,11 @@ def run_engine() -> None:
     config_db_parser(subparser=subparser)
 
     args = parser.parse_args()
-    logger = logging.getLogger(__name__)
 
     engine = Engine(initial_cash=args.cash)
     replayer = MarketDataReplayer()
     if args.mode == "csv":
-        replayer.set_market_data_source(CSVMarketDataSource(path=args.path))
+        replayer.set_market_data_source(source=CSVMarketDataSource(path=args.path))
     elif args.mode == "db":
         # fetch data from the database
         pass

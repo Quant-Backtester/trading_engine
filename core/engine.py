@@ -59,7 +59,7 @@ class Engine:
 
     def start(self) -> None:
         self._running = True
-        logger.info("engine started")
+        logger.info("engine started running")
 
     def run(self) -> None:
         self.start()
@@ -82,7 +82,7 @@ class Engine:
 
     def stop(self) -> None:
         self._running = False
-        logger.debug("engine stopped")
+        logger.info("engine stopped running")
 
     def _dispatch(self, event: Event) -> None:
         handlers: Handlers = self.get_handlers(event=event.event_type)

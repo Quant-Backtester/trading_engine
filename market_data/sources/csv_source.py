@@ -1,22 +1,23 @@
 # STL
-from collections.abc import Iterator
+from collections.abc import Iterator, Generator
 from pathlib import Path
 import csv
 from typing import TextIO
 from datetime import datetime, timedelta
+from os import PathLike
 
 
 # Custom
 from events.payloads import MarketDataPayload, MarketDataTestPayload
-from .source import MarketDataSource
+from .source import SourceReprMixin, MarketDataSource
 
 
-class CSVMarketDataSource(MarketDataSource):
-    def __init__(self, path: str) -> None:
+class CSVMarketDataSource(SourceReprMixin, MarketDataSource):
+    def __init__(self, path: str | PathLike[str]) -> None:
         self._path = Path(path)
         self._symbol = self._path.stem
 
-    def __iter__(self) -> Iterator[MarketDataPayload]:
+    def __iter__(self) -> Iterator[MarketDataPayload | MarketDataTestPayload]:
         with self._path.open("r", newline="") as file:
             # yield from self._read_csv_file(file=file)
             yield from self._test_read_csv_file(file=file)
@@ -30,7 +31,9 @@ class CSVMarketDataSource(MarketDataSource):
                 timestamp=int(row["timestamp"]),
             )
 
-    def _test_read_csv_file(self, file: TextIO) -> Iterator[MarketDataTestPayload]:
+    def _test_read_csv_file(
+        self, file: TextIO
+    ) -> Iterator[MarketDataTestPayload]:
         for row in csv.DictReader(file):
             yield MarketDataTestPayload(
                 symbol=self._symbol,
@@ -39,7 +42,7 @@ class CSVMarketDataSource(MarketDataSource):
                 low=float(row["Low"]),
                 close=float(row["Close"]),
                 volume=int(row["Volume"]),
-                timestamp=self.convert_timestamp(row["Date"])
+                timestamp=self.convert_timestamp(row["Date"]),
             )
 
     @staticmethod
