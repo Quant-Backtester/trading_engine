@@ -1,6 +1,7 @@
 from common.types import Timestamp
 
 class Clock:
+    __slots__= "_time",
     def __init__(self) -> None:
         self._time: Timestamp = 0
 

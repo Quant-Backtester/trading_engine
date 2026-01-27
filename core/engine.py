@@ -80,6 +80,9 @@ class Engine:
 
         self.stop()
 
+    def update_portfolio(self) -> None:
+        pass
+
     def stop(self) -> None:
         self._running = False
         logger.info("engine stopped running")

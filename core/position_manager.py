@@ -12,6 +12,8 @@ type Positions = MutableMapping[Symbol, Position]
 
 
 class PositionManager:
+    __slots__ = "_positions", "_cash", "_realized_pnl"
+
     def __init__(self, initial_cash: Cash = 0.0) -> None:
         self._positions: Positions = {}
         self._cash: Cash = initial_cash
