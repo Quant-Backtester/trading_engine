@@ -1,21 +1,16 @@
-from .market_payload import MarketDataPayload, MarketDataTestPayload, MarketData
+from .market_payload import MarketDataPayload, MarketDataTestPayload, MarketData as MarketData
 from .test_payload import TestingPayload
 from .timer_payload import TimerPayload
 from .order_payload import (
-    OrderCancelPayload,
     OrderFillPayload,
     OrderPayload,
-    OrderSubmitPayload,
 )
 
-type Eventpayload = (
+type EventPayload = (
     MarketDataPayload
     | OrderFillPayload
-    | OrderSubmitPayload
     | TimerPayload
-    | OrderCancelPayload
     | TestingPayload
     | OrderPayload
-    | MarketData
     | MarketDataTestPayload
 )

@@ -372,7 +372,6 @@ class MemoryProfiler:
 def test():
     profiler = MemoryProfiler(top_n=5)
 
-
     with profiler:
         data = [
             [i for i in range(100000)],  # List
@@ -382,7 +381,6 @@ def test():
         ]
 
         profiler.get_snapshot_info(-1)
-
 
 
 if __name__ == "__main__":

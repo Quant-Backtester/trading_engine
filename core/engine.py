@@ -9,6 +9,7 @@ from common.enums import EventEnum
 from .clock import Clock
 from .event_queue import EventQueue
 from .portfolio import Portfolio
+from .order_manager import OrderManager
 from strategies import Strategy
 from common.types import StrategyID, Cash
 
@@ -34,6 +35,7 @@ class Engine:
         self._handlers: Dispatcher = defaultdict(list)
         self._strategies: Strategies = {}
         self._portfolio = Portfolio(initial_cash=initial_cash)
+        self._orderManager = OrderManager()
 
     def reset(self) -> None:
         self._setup(initial_cash=self._initial_cash)
@@ -66,7 +68,7 @@ class Engine:
         while self._running and len(self._queue) > 0:
             event = self._queue.pop()
             self._clock.advance_to(timestamp=event.timestamp)
-            self._dispatch(event=event)
+            # self._dispatch(event=event)
 
             logger.debug(
                 "Dispatching event: type=%s ts=%d",

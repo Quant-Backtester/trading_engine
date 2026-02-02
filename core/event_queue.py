@@ -14,6 +14,7 @@ class Entry(NamedTuple):
 
 class EventQueue:
     __slots__ = "_heap", "_sequence"
+
     def __init__(self) -> None:
         self._heap: list[Entry] = []
         self._sequence: int = 0

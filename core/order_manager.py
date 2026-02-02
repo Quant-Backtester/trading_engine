@@ -1,8 +1,11 @@
-from collections.abc import MutableMapping
+from collections.abc import MutableMapping, Sequence
 import logging
 
-from events.payloads import OrderPayload
+from events.payloads import OrderPayload, OrderFillPayload
 from common.types import OrderId
+from events.event import Event
+from common.enums import EventEnum, Side
+from events.payloads import MarketDataPayload, EventPayload
 
 
 type OrderMapping = MutableMapping[OrderId, OrderPayload]
@@ -26,3 +29,40 @@ class OrderManager:
             return
         self._orders[order.order_id] = order
         logger.info("order with OrderID: %s is setted", order.order_id)
+
+    def pop_order(self, order_id: OrderId) -> None:
+        self._orders.pop(order_id)
+
+    def handle_market_data(
+        self, data: MarketDataPayload
+    ) -> Sequence[OrderFillPayload | None]:
+        """simplfied no orderbook or partial fill at the moment"""
+
+        def get_order_fill(
+            order: OrderPayload, data: MarketDataPayload
+        ) -> OrderFillPayload:
+            return OrderFillPayload(
+                order=order,
+                fill_price=data.price,
+                fill_quantity=order.quantity,
+                remaining_quantity=0,
+                fill_timestamp=data.timestamp,
+            )
+
+        filled_order: Sequence = []
+        price = data.price
+        for order in self._orders.values():
+            if (order.side == Side.BUY and order.price >= price) or (
+                order.side == Side.SELL and order.price <= price
+            ):
+                filled_order.append(get_order_fill(order=order, data=data))
+                self.pop_order(order.order_id)
+
+        return filled_order
+
+    def on_data(self, event: Event) -> Sequence[EventPayload]:
+        if event.event_type == EventEnum.MARKET_DATA:
+            return self.handle_market_data(event.payload) # type: ignore
+        return []
+
+

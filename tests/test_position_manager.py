@@ -51,8 +51,8 @@ class TestPositionManager(unittest.TestCase):
 
         pos = self.pm.get_position(self.symbol)
         self.assertIsNotNone(pos)
-        self.assertEqual(pos.quantity, 10) # type: ignore
-        self.assertEqual(pos.avg_price, 100.0)# type: ignore
+        self.assertEqual(pos.quantity, 10)  # type: ignore
+        self.assertEqual(pos.avg_price, 100.0)  # type: ignore
         self.assertEqual(self.pm.cash, 9_000.0)
         self.assertEqual(self.pm.realized_pnl, 0.0)
 
@@ -62,8 +62,8 @@ class TestPositionManager(unittest.TestCase):
 
         pos = self.pm.get_position(self.symbol)
         self.assertIsNotNone(pos)
-        self.assertEqual(pos.quantity, 20)# type: ignore
-        self.assertAlmostEqual(pos.avg_price, 105.0)# type: ignore
+        self.assertEqual(pos.quantity, 20)  # type: ignore
+        self.assertAlmostEqual(pos.avg_price, 105.0)  # type: ignore
         self.assertEqual(self.pm.cash, 7_900.0)
         self.assertEqual(self.pm.realized_pnl, 0.0)
 
@@ -73,8 +73,8 @@ class TestPositionManager(unittest.TestCase):
 
         pos = self.pm.get_position(self.symbol)
         self.assertIsNotNone(pos)
-        self.assertEqual(pos.quantity, 6)# type: ignore
-        self.assertEqual(pos.avg_price, 100.0)# type: ignore
+        self.assertEqual(pos.quantity, 6)  # type: ignore
+        self.assertEqual(pos.avg_price, 100.0)  # type: ignore
 
         # Realized PnL = 4 * (110 - 100)
         self.assertEqual(self.pm.realized_pnl, 40.0)
@@ -86,8 +86,8 @@ class TestPositionManager(unittest.TestCase):
 
         pos = self.pm.get_position(self.symbol)
         self.assertIsNotNone(pos)
-        self.assertEqual(pos.quantity, 0)# type: ignore
-        self.assertEqual(pos.avg_price, 0.0)# type: ignore
+        self.assertEqual(pos.quantity, 0)  # type: ignore
+        self.assertEqual(pos.avg_price, 0.0)  # type: ignore
 
         self.assertEqual(self.pm.realized_pnl, 100.0)
         self.assertEqual(self.pm.cash, 10_100.0)
@@ -98,8 +98,8 @@ class TestPositionManager(unittest.TestCase):
 
         pos = self.pm.get_position(self.symbol)
         self.assertIsNotNone(pos)
-        self.assertEqual(pos.quantity, -5)# type: ignore
-        self.assertEqual(pos.avg_price, 110.0)# type: ignore
+        self.assertEqual(pos.quantity, -5)  # type: ignore
+        self.assertEqual(pos.avg_price, 110.0)  # type: ignore
 
         # Closed 10 shares at +10 profit
         self.assertEqual(self.pm.realized_pnl, 100.0)
@@ -112,8 +112,8 @@ class TestPositionManager(unittest.TestCase):
 
         pos = self.pm.get_position(self.symbol)
         self.assertIsNotNone(pos)
-        self.assertEqual(pos.quantity, -10)# type: ignore
-        self.assertEqual(pos.avg_price, 200.0)# type: ignore
+        self.assertEqual(pos.quantity, -10)  # type: ignore
+        self.assertEqual(pos.avg_price, 200.0)  # type: ignore
         self.assertEqual(self.pm.cash, 12_000.0)
         self.assertEqual(self.pm.realized_pnl, 0.0)
 
@@ -123,8 +123,8 @@ class TestPositionManager(unittest.TestCase):
 
         pos = self.pm.get_position(self.symbol)
         self.assertIsNotNone(pos)
-        self.assertEqual(pos.quantity, -6)# type: ignore
-        self.assertEqual(pos.avg_price, 200.0)# type: ignore
+        self.assertEqual(pos.quantity, -6)  # type: ignore
+        self.assertEqual(pos.avg_price, 200.0)  # type: ignore
 
         # Profit: 4 * (200 - 180)
         self.assertEqual(self.pm.realized_pnl, 80.0)
@@ -136,8 +136,8 @@ class TestPositionManager(unittest.TestCase):
 
         pos = self.pm.get_position(self.symbol)
         self.assertIsNotNone(pos)
-        self.assertEqual(pos.quantity, 5)# type: ignore
-        self.assertEqual(pos.avg_price, 180.0)# type: ignore
+        self.assertEqual(pos.quantity, 5)  # type: ignore
+        self.assertEqual(pos.avg_price, 180.0)  # type: ignore
 
         # Closed 10 shares at +20 profit
         self.assertEqual(self.pm.realized_pnl, 200.0)
@@ -153,8 +153,8 @@ class TestPositionManager(unittest.TestCase):
         self.assertEqual(self.pm.realized_pnl, 15)
 
     def test_lost(self):
-        self._buy(15,200)
-        self._sell(15,199)
+        self._buy(15, 200)
+        self._sell(15, 199)
 
         self.assertEqual(self.pm.cash, 9985)
         self.assertEqual(self.pm.realized_pnl, -15)
@@ -162,14 +162,18 @@ class TestPositionManager(unittest.TestCase):
     def test_unrealized_pnl_buy(self):
         self._buy(10, 200)
 
-        update = MarketDataPayload(symbol="AAPL",timestamp=1, price=210, volume=10000)
+        update = MarketDataPayload(
+            symbol="AAPL", timestamp=1, price=210, volume=10000
+        )
         self.pm.on_market_data(update)
         self.assertEqual(self.pm.total_unrealized_pnl, 100)
 
     def test_unrealized_pnl_sell(self):
         self._sell(10, 200)
 
-        update = MarketDataPayload(symbol="AAPL",timestamp=1, price=190, volume=10000)
+        update = MarketDataPayload(
+            symbol="AAPL", timestamp=1, price=190, volume=10000
+        )
         self.pm.on_market_data(update)
         self.assertEqual(self.pm.total_unrealized_pnl, 100)
 

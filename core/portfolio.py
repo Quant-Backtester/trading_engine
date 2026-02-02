@@ -5,11 +5,11 @@ from dataclasses import dataclass
 # Custom
 from common.types import Cash, OrderId, Price, Symbol, Quantity, Percentage
 from .position_manager import PositionManager
-from events.payloads import OrderSubmitPayload, OrderPayload, OrderFillPayload
+from events.payloads import OrderPayload, OrderFillPayload
 from common.enums import Side
 
 
-type Openings = MutableMapping[OrderId, OrderSubmitPayload]
+type Openings = MutableMapping[OrderId, OrderPayload]
 
 
 @dataclass(slots=True)

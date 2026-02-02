@@ -25,7 +25,7 @@ def config_db_parser(
 
 
 def config_json_paser(
-        subparser: _SubParsersAction[argparse.ArgumentParser]
+    subparser: _SubParsersAction[argparse.ArgumentParser],
 ) -> None:
     pass
 
@@ -39,7 +39,9 @@ def config_helper_argument(
 def config_engine_argument(
     parser: argparse.ArgumentParser,
 ) -> None:
-    parser.add_argument("-c", "--cash", type=int, help="Your initial trading capital")
+    parser.add_argument(
+        "-c", "--cash", type=int, help="Your initial trading capital"
+    )
 
 
 def run_engine() -> None:
@@ -62,7 +64,9 @@ def run_engine() -> None:
     engine = Engine(initial_cash=args.cash)
     replayer = MarketDataReplayer()
     if args.mode == "csv":
-        replayer.set_market_data_source(source=CSVMarketDataSource(path=args.path))
+        replayer.set_market_data_source(
+            source=CSVMarketDataSource(path=args.path)
+        )
     elif args.mode == "db":
         # fetch data from the database
         pass
@@ -71,7 +75,6 @@ def run_engine() -> None:
         pass
 
     replayer.replay(engine=engine, chunked=True)
-
 
 
 if __name__ == "__main__":

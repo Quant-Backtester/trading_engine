@@ -18,6 +18,8 @@ logger = logging.getLogger("engine")
 
 
 class MarketDataReplayer:
+    __slots__ = "_source", "_chunk_size"
+
     def __init__(self, chunk_size: int = 150) -> None:
         self._source: MarketDataSource | None = None
         self._chunk_size: int = chunk_size
@@ -27,7 +29,6 @@ class MarketDataReplayer:
             raise ValueError("Source is None")
 
     def _replay_in_chunk(self, engine: Engine) -> None:
-
         for chunk, chunk_num in self._generate_chunks():
             self._process_chunk(engine, chunk, chunk_num)
 

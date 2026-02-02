@@ -1,4 +1,3 @@
-
 from enum import StrEnum, auto, unique
 
 
@@ -26,3 +25,16 @@ class TimerEnum(StrEnum):
     BAR_CLOSE = auto()
     SESSION_EVENT = auto()
     CLEANUP = auto()
+
+
+@unique
+class OrderType(StrEnum):
+    LIMIT = auto()
+    MARKET = auto()
+
+    # implement later
+    GTC = auto()
+    FOK = auto()
+    AON = auto()
+    IOC = auto()
+    DAY = auto()

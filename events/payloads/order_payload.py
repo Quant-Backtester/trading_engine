@@ -2,30 +2,25 @@
 from dataclasses import dataclass
 
 # Custom
-from common.enums import Side
-from common.types import OrderId, Symbol, Quantity, Price
+from common.enums import Side, OrderType
+from common.types import OrderId, Symbol, Quantity, Price, Timestamp
 
 
 @dataclass(frozen=True, slots=True)
 class OrderPayload:
+    timestamp: Timestamp
     order_id: OrderId
     symbol: Symbol
     side: Side
     quantity: Quantity
+    order_type: OrderType
+    price: Price
 
 
 @dataclass(frozen=True, slots=True)
 class OrderFillPayload:
     order: OrderPayload
+    fill_timestamp: Timestamp
     fill_price: Price
     fill_quantity: Quantity
-
-""" Logic for future, not needed for now """
-@dataclass(frozen=True, slots=True)
-class OrderSubmitPayload:
-    order: OrderPayload
-
-
-@dataclass(frozen=True, slots=True)
-class OrderCancelPayload:
-    order_id: OrderId
+    remaining_quantity: Quantity

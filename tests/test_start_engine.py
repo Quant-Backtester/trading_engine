@@ -9,15 +9,19 @@ from market_data import FakeMarketDataSource
 from strategies import DummyStrategy
 
 
-
-
 class TestName(unittest.TestCase):
     def test_market_data_replay_and_dispatch(self):
         # Arrange
         records = [
-            MarketDataPayload(timestamp=1, symbol="AAPL", price=100.0, volume=10),
-            MarketDataPayload(timestamp=2, symbol="AAPL", price=101.0, volume=5),
-            MarketDataPayload(timestamp=3, symbol="AAPL", price=102.0, volume=8),
+            MarketDataPayload(
+                timestamp=1, symbol="AAPL", price=100.0, volume=10
+            ),
+            MarketDataPayload(
+                timestamp=2, symbol="AAPL", price=101.0, volume=5
+            ),
+            MarketDataPayload(
+                timestamp=3, symbol="AAPL", price=102.0, volume=8
+            ),
         ]
 
         source = FakeMarketDataSource(records)
@@ -57,5 +61,3 @@ class TestName(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-

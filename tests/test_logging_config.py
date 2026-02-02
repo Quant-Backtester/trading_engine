@@ -10,12 +10,12 @@ class TestLogging(unittest.TestCase):
         except Exception as e:
             self.fail(f"Logging setup raised exception: {e}")
 
-
     def setUp(self) -> None:
         return super().setUp()
 
     def tearDown(self) -> None:
         logging.shutdown()
+
     @classmethod
     def setUpClass(cls) -> None:
         return super().setUpClass()
@@ -29,4 +29,3 @@ if __name__ == "__main__":
     unittest.main()
 
 # @description
-
