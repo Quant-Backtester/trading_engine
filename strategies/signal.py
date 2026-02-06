@@ -13,7 +13,12 @@ class SignalType(StrEnum):
 
 
 class Signal(ABC):
-    pass
+    __slots__ = ()
+
+
+class NullSignal(Signal):
+    __slots__ = ()
+
 
 @dataclass(slots=True, frozen=True)
 class AddSignal(Signal):
@@ -21,6 +26,7 @@ class AddSignal(Signal):
     price: Price
     takeProfit: Price | None
     stopLoss: Price | None
+
 
 @dataclass(slots=True, frozen=True)
 class CancelSignal(Signal):

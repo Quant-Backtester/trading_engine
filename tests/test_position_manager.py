@@ -4,7 +4,7 @@ import unittest
 from core.position_manager import PositionManager
 from core.position import Position
 from events.payloads import OrderPayload, OrderFillPayload, MarketDataPayload
-from common.enums import Side
+from common.enums import Side, OrderType
 
 
 class TestPositionManager(unittest.TestCase):
@@ -24,6 +24,8 @@ class TestPositionManager(unittest.TestCase):
             symbol=self.symbol,
             side=Side.BUY,
             quantity=qty,
+            order_type=OrderType.LIMIT,
+            price=price
         )
         fill = OrderFillPayload(
             order=order,

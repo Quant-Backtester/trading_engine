@@ -1,3 +1,4 @@
+from .signal import Signal, NullSignal
 from .strategy import Strategy
 from events.event import Event
 from common.types import StrategyID
@@ -12,3 +13,6 @@ class DummyStrategy(Strategy):
     def strategy_id(self) -> StrategyID:
         return StrategyEnum.DUMMY
 
+    def on_event(self, event: Event) -> Signal:
+        self.events.append(event)
+        return NullSignal()

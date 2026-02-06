@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 # Custom
 from events.event import Event
 from common.types import StrategyID
-from events.payloads import OrderPayload
+from .signal import Signal
 
 
 
@@ -15,4 +15,4 @@ class Strategy(ABC):
     def strategy_id(self) -> StrategyID: ...
 
     @abstractmethod
-    def on_event(self, event: Event) -> OrderPayload: ...
+    def on_event(self, event: Event) -> Signal: ...
