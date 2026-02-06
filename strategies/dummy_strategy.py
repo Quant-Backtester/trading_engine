@@ -12,8 +12,3 @@ class DummyStrategy(Strategy):
     def strategy_id(self) -> StrategyID:
         return StrategyEnum.DUMMY
 
-    def on_event(self, event: Event) -> None:
-        self.events.append(event)
-
-    def on_order_fill(self, event: Event) -> None:
-        return super().on_order_fill(event)

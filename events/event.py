@@ -14,7 +14,7 @@ from common.types import Timestamp
 from common.enums import EventEnum
 
 
-EVENT_PAYLOAD_MAP = {
+_EVENT_PAYLOAD_MAP = {
     EventEnum.MARKET_DATA: (
         MarketDataPayload,
         MarketDataTestPayload,
@@ -31,7 +31,7 @@ class Event:
     payload: EventPayload
 
     def __post_init__(self) -> None:
-        allowed_types = EVENT_PAYLOAD_MAP.get(self.event_type)
+        allowed_types = _EVENT_PAYLOAD_MAP.get(self.event_type)
         if allowed_types is None:
             raise ValueError(f"Unknown event type: {self.event_type}")
 

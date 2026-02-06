@@ -79,6 +79,7 @@ class Engine:
             for strategy_id, strategy in self._strategies.items():
                 logger.info("on event %s", strategy_id)
                 strategy.on_event(event=event)
+                
 
         self.stop()
 

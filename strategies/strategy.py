@@ -1,21 +1,18 @@
 # STL
-from typing import Protocol, runtime_checkable
+from abc import ABC, abstractmethod
 
 
 # Custom
 from events.event import Event
 from common.types import StrategyID
+from events.payloads import OrderPayload
 
 
-@runtime_checkable
-class Strategy(Protocol):
+
+
+class Strategy(ABC):
     @property
     def strategy_id(self) -> StrategyID: ...
 
-    """ Do not define a setter/deleter for strategy id, it should be immutable """
-
-    def on_event(self, event: Event) -> None:
-        pass
-
-    def on_order_fill(self, event: Event) -> None:
-        pass
+    @abstractmethod
+    def on_event(self, event: Event) -> OrderPayload: ...

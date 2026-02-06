@@ -20,7 +20,7 @@ class OrderManager:
     def __init__(self) -> None:
         self._orders: OrderMapping = {}
 
-    def cancel_order(self, order_id: OrderId) -> None:
+    def remove_order(self, order_id: OrderId) -> None:
         self._orders.pop(order_id)
 
     def add_order(self, order: OrderPayload) -> None:
@@ -30,13 +30,10 @@ class OrderManager:
         self._orders[order.order_id] = order
         logger.info("order with OrderID: %s is setted", order.order_id)
 
-    def pop_order(self, order_id: OrderId) -> None:
-        self._orders.pop(order_id)
-
     def handle_market_data(
         self, data: MarketDataPayload
     ) -> Sequence[OrderFillPayload | None]:
-        """simplfied no orderbook or partial fill at the moment"""
+        """simplfied. no orderbook and partial fill at the moment"""
 
         def get_order_fill(
             order: OrderPayload, data: MarketDataPayload
@@ -56,11 +53,11 @@ class OrderManager:
                 order.side == Side.SELL and order.price <= price
             ):
                 filled_order.append(get_order_fill(order=order, data=data))
-                self.pop_order(order.order_id)
+                self.remove_order(order.order_id)
 
         return filled_order
 
-    def on_data(self, event: Event) -> Sequence[EventPayload]:
+    def on_event(self, event: Event) -> Sequence[EventPayload]:
         if event.event_type == EventEnum.MARKET_DATA:
             return self.handle_market_data(event.payload) # type: ignore
         return []
