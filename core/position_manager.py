@@ -1,5 +1,5 @@
 # STL
-from collections.abc import MutableMapping
+from collections.abc import MutableMapping, Sequence
 
 
 # Custom
@@ -21,6 +21,7 @@ class PositionManager:
 
     def get_position(self, symbol: Symbol) -> Position | None:
         return self._positions.get(symbol)
+
 
     def _set_new_position(self, symbol: Symbol) -> Position:
         pos = self.get_position(symbol=symbol)
@@ -133,6 +134,12 @@ class PositionManager:
             # Flipped
             pos.quantity = new_qty
             pos.avg_price = price
+
+
+    def on_fill_sequence(self, fills: Sequence[OrderFillPayload]) -> None:
+        for fill in fills:
+            self.on_fill(fill=fill)
+            
 
     def on_fill(self, fill: OrderFillPayload) -> None:
         self._validate_fill(fill=fill)

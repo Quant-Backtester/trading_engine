@@ -5,7 +5,7 @@ from events.payloads import OrderPayload, OrderFillPayload
 from common.types import OrderId
 from events.event import Event
 from common.enums import EventEnum, Side
-from events.payloads import MarketDataPayload, EventPayload
+from events.payloads import MarketDataPayload
 
 
 type OrderMapping = MutableMapping[OrderId, OrderPayload]
@@ -57,9 +57,7 @@ class OrderManager:
 
         return filled_order
 
-    def on_event(self, event: Event) -> Sequence[EventPayload]:
+    def on_event(self, event: Event) -> Sequence[OrderFillPayload | None]:
         if event.event_type == EventEnum.MARKET_DATA:
-            return self.handle_market_data(event.payload) # type: ignore
+            return self.handle_market_data(data=event.payload) # type: ignore
         return []
-
-

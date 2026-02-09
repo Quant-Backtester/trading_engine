@@ -10,6 +10,7 @@ from .clock import Clock
 from .event_queue import EventQueue
 from .portfolio import Portfolio
 from .order_manager import OrderManager
+from .position_manager import PositionManager
 from strategies import Strategy
 from common.types import StrategyID, Cash
 
@@ -36,6 +37,7 @@ class Engine:
         self._strategies: Strategies = {}
         self._portfolio = Portfolio(initial_cash=initial_cash)
         self._orderManager = OrderManager()
+        self._positionManager = PositionManager(initial_cash=initial_cash)
 
     def reset(self) -> None:
         self._setup(initial_cash=self._initial_cash)
@@ -79,7 +81,10 @@ class Engine:
             for strategy_id, strategy in self._strategies.items():
                 logger.info("on event %s", strategy_id)
                 strategy.on_event(event=event)
-                
+
+            orders = self._orderManager.on_event(event=event)
+
+            self._positionManager.on_fill_sequence(orders)
 
         self.stop()
 

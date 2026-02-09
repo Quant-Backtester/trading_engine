@@ -21,4 +21,7 @@
 - used to manage mutliple position for different stock (identify by their symbol)
 - Handle filling of position
 
-### 
+### OrderManager
+- used to manage unfilled Order (in the pending state)
+- if the order is filled, the order will be redirected to the Position Manager
+

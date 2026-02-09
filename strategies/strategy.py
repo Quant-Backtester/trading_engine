@@ -12,6 +12,7 @@ from .signal import Signal
 
 class Strategy(ABC):
     @property
+    @abstractmethod
     def strategy_id(self) -> StrategyID: ...
 
     @abstractmethod
