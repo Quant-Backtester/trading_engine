@@ -57,7 +57,7 @@ class OrderManager:
 
         return filled_order
 
-    def on_event(self, event: Event) -> Sequence[OrderFillPayload | None]:
+    def on_event(self, event: Event) -> Sequence[OrderFillPayload]:
         if event.event_type == EventEnum.MARKET_DATA:
-            return self.handle_market_data(data=event.payload) # type: ignore
+            return self.handle_market_data(data=event.payload)  # type: ignore
         return []

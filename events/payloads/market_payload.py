@@ -17,14 +17,7 @@ class MarketDataPayload:
     symbol: Symbol
     price: Price
     volume: Volume
-
-
-@dataclass(frozen=True, slots=True)
-class MarketDataTestPayload:
-    timestamp: Timestamp
-    symbol: Symbol
-    open: Price
-    high: Price
-    low: Price
-    close: Price
-    volume: Volume
+    Open: Price | None = None
+    High: Price | None = None
+    Low: Price | None = None
+    Close: Price | None = None

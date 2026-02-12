@@ -1,6 +1,5 @@
 from .market_payload import (
     MarketDataPayload,
-    MarketDataTestPayload,
     MarketData as MarketData,
 )
 from .test_payload import TestingPayload
@@ -10,7 +9,7 @@ from .order_payload import (
     OrderPayload,
 )
 
-type MarketPayloads = MarketDataPayload | MarketDataTestPayload
+type MarketPayloads = MarketDataPayload 
 type OrderPayloas = OrderPayload | OrderFillPayload
 type SystemPayloads = TimerPayload | TestingPayload
 

@@ -44,7 +44,7 @@ def config_engine_argument(
     )
 
 
-def run_engine() -> None:
+def main() -> None:
     """later on, the engine can be running in the memory (redis/vulkey)"""
     setup_engine_logging(level=logging.INFO)
     parser = argparse.ArgumentParser()
@@ -78,4 +78,4 @@ def run_engine() -> None:
 
 
 if __name__ == "__main__":
-    run_engine()
+    main()

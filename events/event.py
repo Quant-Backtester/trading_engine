@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from .payloads import (
     EventPayload,
     MarketDataPayload,
-    MarketDataTestPayload,
     OrderFillPayload,
     TimerPayload,
 )
@@ -17,7 +16,6 @@ from common.enums import EventEnum
 _EVENT_PAYLOAD_MAP = {
     EventEnum.MARKET_DATA: (
         MarketDataPayload,
-        MarketDataTestPayload,
     ),
     EventEnum.ORDER_FILL: (OrderFillPayload,),
     EventEnum.TIMER: (TimerPayload,),
