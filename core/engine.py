@@ -35,7 +35,7 @@ class Engine:
         self._clock: Clock = Clock()
         self._handlers: Dispatcher = defaultdict(list)
         self._strategies: Strategies = {}
-        self._portfolio = Portfolio()
+        self._portfolio = Portfolio(initial_capital=self._initial_cash)
         self._orderManager = OrderManager()
         self._positionManager = PositionManager(initial_cash=self._initial_cash)
 

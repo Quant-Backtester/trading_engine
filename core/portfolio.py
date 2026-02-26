@@ -51,7 +51,7 @@ class TradingMetrics:
 
 
 class Portfolio:
-    def __init__(self, initial_capital: int) -> None:
+    def __init__(self, initial_capital: Cash) -> None:
         self.initial_capital = initial_capital
         self.current_capital = initial_capital
         self._trades: list[Trade] = []
