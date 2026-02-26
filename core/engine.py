@@ -12,13 +12,13 @@ from .portfolio import Portfolio
 from .order_manager import OrderManager
 from .position_manager import PositionManager
 from strategies import Strategy
-from common.types import StrategyID, Cash
-
+from strategies.strategy_enum import StrategyEnum
+from common.types import Cash
 
 type Handler = Callable[[Event], None]
 type Handlers = MutableSequence[Handler]
 type Dispatcher = MutableMapping[EventEnum, Handlers]
-type Strategies = MutableMapping[StrategyID, Strategy]
+type Strategies = MutableMapping[StrategyEnum, Strategy]
 
 
 logger: logging.Logger = logging.getLogger("engine")
@@ -27,20 +27,20 @@ logger: logging.Logger = logging.getLogger("engine")
 class Engine:
     def __init__(self, initial_cash: Cash = 100000) -> None:
         self._initial_cash = initial_cash
-        self._setup(initial_cash)
+        self._setup()
         logger.info("engine setup successfully")
 
-    def _setup(self, initial_cash: Cash) -> None:
+    def _setup(self) -> None:
         self._queue: EventQueue = EventQueue()
         self._clock: Clock = Clock()
         self._handlers: Dispatcher = defaultdict(list)
         self._strategies: Strategies = {}
-        self._portfolio = Portfolio(initial_cash=initial_cash)
+        self._portfolio = Portfolio()
         self._orderManager = OrderManager()
-        self._positionManager = PositionManager(initial_cash=initial_cash)
+        self._positionManager = PositionManager(initial_cash=self._initial_cash)
 
     def reset(self) -> None:
-        self._setup(initial_cash=self._initial_cash)
+        self._setup()
         logger.info("reset sucessfully")
 
     def push_event(self, event: Event) -> None:
@@ -55,7 +55,7 @@ class Engine:
     def register_strategy(self, strategy: Strategy) -> None:
         self._strategies[strategy.strategy_id] = strategy
 
-    def unregister_strategy(self, strategy_id: StrategyID) -> None:
+    def unregister_strategy(self, strategy_id: StrategyEnum) -> None:
         self._strategies.pop(strategy_id)
 
     def get_handlers(self, event: EventEnum) -> Handlers:
@@ -80,7 +80,7 @@ class Engine:
 
             for strategy_id, strategy in self._strategies.items():
                 logger.info("on event %s", strategy_id)
-                strategy.on_event(event=event)
+                signals = strategy.on_event(event=event)
 
             orders = self._orderManager.on_event(event=event)
 

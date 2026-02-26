@@ -7,7 +7,7 @@ import csv
 from datetime import datetime
 
 # Custom
-from events.payloads import MarketDataPayload, MarketData
+from events.payloads import MarketDataPayload
 
 
 class SourceReprMixin:
@@ -21,7 +21,7 @@ class SourceReprMixin:
 
 
 @runtime_checkable
-class MarketDataSource[T: MarketData](Protocol):
+class MarketDataSource[T: MarketDataPayload](Protocol):
     __slots__ = ()
 
     def __iter__(self) -> Iterator[T]: ...

@@ -14,9 +14,7 @@ from common.enums import EventEnum
 
 
 _EVENT_PAYLOAD_MAP = {
-    EventEnum.MARKET_DATA: (
-        MarketDataPayload,
-    ),
+    EventEnum.MARKET_DATA: (MarketDataPayload,),
     EventEnum.ORDER_FILL: (OrderFillPayload,),
     EventEnum.TIMER: (TimerPayload,),
 }
@@ -32,7 +30,6 @@ class Event:
         self._validate_payload()
 
     def _validate_payload(self) -> None:
-        """Validate that payload type matches event type."""
         allowed_types = _EVENT_PAYLOAD_MAP.get(self.event_type)
         if allowed_types is None:
             raise ValueError(f"Unknown event type: {self.event_type}")
@@ -41,7 +38,6 @@ class Event:
             self._raise_payload_type_error(allowed_types)
 
     def _raise_payload_type_error(self, allowed_types: tuple) -> None:
-        """Raise a formatted type error."""
         expected = ", ".join(t.__name__ for t in allowed_types)
         actual = type(self.payload).__name__
         raise TypeError(
