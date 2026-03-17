@@ -8,8 +8,6 @@ from .strategy_enum import StrategyEnum
 from .signal import Signal
 
 
-
-
 class Strategy(ABC):
     @property
     @abstractmethod

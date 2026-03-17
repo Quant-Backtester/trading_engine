@@ -2,14 +2,8 @@ from dataclasses import dataclass
 from enum import StrEnum, auto, unique
 from abc import ABC
 
-from common.enums import Side
+from common.enums import OrderType, Side
 from common.types import Price, OrderId, Quantity
-
-
-@unique
-class SignalType(StrEnum):
-    ADD = auto()
-    CANCEL = auto()
 
 
 class Signal(ABC):
@@ -23,9 +17,10 @@ class NullSignal(Signal):
 @dataclass(slots=True, frozen=True)
 class AddSignal(Signal):
     side: Side
+    type: OrderType
     price: Price
-    takeProfit: Price | None
-    stopLoss: Price | None
+    takeProfit: Price | None = None
+    stopLoss: Price | None = None
 
 
 @dataclass(slots=True, frozen=True)

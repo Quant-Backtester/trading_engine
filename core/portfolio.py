@@ -45,7 +45,7 @@ class TradingMetrics:
     largest_loss: Cash
     max_consecutive_wins: int
     max_consecutive_losses: int
-    expectancy: Cash  # Expected profit per trade
+    expectancy: Cash
     sharpe_ratio: float | None = None
     max_drawdown: Percentage | None = None
 
@@ -201,12 +201,10 @@ class Portfolio:
         )
 
     def add_trade(self, trade: Trade) -> None:
-        """Add a completed trade to the portfolio"""
         self._trades.append(trade)
         self.current_capital += trade.profit_loss
 
     def get_trading_metrics(self) -> TradingMetrics:
-        """Generate comprehensive trading metrics"""
         return TradingMetrics(
             win_rate=self.win_rate,
             profit_factor=self.profit_factor,
