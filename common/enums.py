@@ -2,14 +2,6 @@ from enum import StrEnum, auto, unique
 
 
 @unique
-class EventEnum(StrEnum):
-    MARKET_DATA = auto()
-    ORDER_FILL = auto()
-    ORDER_CANCEL = auto()
-    TIMER = auto()
-
-
-@unique
 class Side(StrEnum):
     BUY = auto()
     SELL = auto()

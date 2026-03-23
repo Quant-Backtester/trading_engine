@@ -3,9 +3,10 @@ import logging
 
 from events.payloads import OrderPayload, OrderFillPayload
 from common.types import OrderId
-from events.event import Event
-from common.enums import EventEnum, Side
+from events.event import Event, MarketDataEvent
+from common.enums import Side
 from events.payloads import MarketDataPayload
+from strategies.signal import AddSignal, Signal
 
 
 type OrderMapping = MutableMapping[OrderId, OrderPayload]
@@ -23,6 +24,7 @@ class OrderManager:
     def remove_order(self, order_id: OrderId) -> None:
         self._orders.pop(order_id)
 
+
     def add_order(self, order: OrderPayload) -> None:
         if self._orders[order.order_id]:
             logger.info("order %s already exist.", order.order_id)
@@ -33,8 +35,6 @@ class OrderManager:
     def handle_market_data(
         self, data: MarketDataPayload
     ) -> Sequence[OrderFillPayload | None]:
-        """simplfied. no orderbook and partial fill at the moment"""
-
         def get_order_fill(
             order: OrderPayload, data: MarketDataPayload
         ) -> OrderFillPayload:
@@ -57,7 +57,12 @@ class OrderManager:
 
         return filled_order
 
+    def handle_signal(self, signal: Signal, time: int) -> None:
+        if isinstance(signal, AddSignal):
+            temp = OrderPayload(timestamp=time, symbol=signal.symbol,side=signal.side, quantity=signal.quantity, order_type=signal.type)
+            self.add_order(order=temp)
+
     def on_event(self, event: Event) -> Sequence[OrderFillPayload]:
-        if event.event_type == EventEnum.MARKET_DATA:
+        if isinstance(event, MarketDataEvent):
             return self.handle_market_data(data=event.payload)  # type: ignore
         return []

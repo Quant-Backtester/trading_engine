@@ -3,7 +3,7 @@ from enum import StrEnum, auto, unique
 from abc import ABC
 
 from common.enums import OrderType, Side
-from common.types import Price, OrderId, Quantity
+from common.types import Price, OrderId, Quantity, Symbol
 
 
 class Signal(ABC):
@@ -16,9 +16,11 @@ class NullSignal(Signal):
 
 @dataclass(slots=True, frozen=True)
 class AddSignal(Signal):
+    symbol: Symbol
     side: Side
     type: OrderType
     price: Price
+    quantity: Quantity
     takeProfit: Price | None = None
     stopLoss: Price | None = None
 

@@ -22,11 +22,17 @@ class DCA(Strategy):
     def on_event(self, event: Event) -> Signal:
         currnet_time = event.timestamp
 
-        if self._should_buy(currnet_time) and isinstance(event.payload, MarketDataPayload):
-            return AddSignal(side=Side.BUY, type =OrderType.MARKET ,price=event.payload.price)
+        if self._should_buy(currnet_time) and isinstance(
+            event.payload, MarketDataPayload
+        ):
+            return AddSignal(
+                side=Side.BUY,
+                type=OrderType.MARKET,
+                price=event.payload.price,
+                symbol=event.payload.symbol,
+            )
 
-        return NullSignal
-
+        return NullSignal()
 
     def _should_buy(self, current_timestamp: int) -> bool:
         if self._last_buy_time is None:
@@ -37,11 +43,9 @@ class DCA(Strategy):
         return time_since_last_buy >= self._buyframe
 
     def get_next_buy_time(self) -> int | None:
-
         if self._last_buy_time is None:
             return None
         return self._last_buy_time + self._buyframe
-
 
     def reset(self) -> None:
         self._last_buy_time = None

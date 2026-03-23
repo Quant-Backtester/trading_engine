@@ -1,7 +1,6 @@
 # STL
 import heapq
 from typing import NamedTuple
-from collections.abc import MutableSequence
 
 # Custom
 from events.event import Event

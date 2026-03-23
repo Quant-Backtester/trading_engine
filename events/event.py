@@ -3,44 +3,30 @@ from dataclasses import dataclass
 
 # custom
 from .payloads import (
-    EventPayload,
     MarketDataPayload,
     OrderFillPayload,
     TimerPayload,
 )
 
 from common.types import Timestamp
-from common.enums import EventEnum
-
-
-_EVENT_PAYLOAD_MAP = {
-    EventEnum.MARKET_DATA: (MarketDataPayload,),
-    EventEnum.ORDER_FILL: (OrderFillPayload,),
-    EventEnum.TIMER: (TimerPayload,),
-}
 
 
 @dataclass(frozen=True, slots=True)
-class Event:
+class MarketDataEvent:
     timestamp: Timestamp
-    event_type: EventEnum
-    payload: EventPayload
+    payload: MarketDataPayload
 
-    def __post_init__(self) -> None:
-        self._validate_payload()
 
-    def _validate_payload(self) -> None:
-        allowed_types = _EVENT_PAYLOAD_MAP.get(self.event_type)
-        if allowed_types is None:
-            raise ValueError(f"Unknown event type: {self.event_type}")
+@dataclass(frozen=True, slots=True)
+class OrderFillEvent:
+    timestamp: Timestamp
+    payload: OrderFillPayload
 
-        if not isinstance(self.payload, allowed_types):
-            self._raise_payload_type_error(allowed_types)
 
-    def _raise_payload_type_error(self, allowed_types: tuple) -> None:
-        expected = ", ".join(t.__name__ for t in allowed_types)
-        actual = type(self.payload).__name__
-        raise TypeError(
-            f"Invalid payload type for {self.event_type}: "
-            f"expected one of [{expected}], got {actual}"
-        )
+@dataclass(frozen=True, slots=True)
+class TimerEvent:
+    timestamp: Timestamp
+    payload: TimerPayload
+
+
+type Event = MarketDataEvent | OrderFillEvent | TimerEvent

@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Protocol
 
 from common.types import Price, Symbol, Timestamp, Volume
 

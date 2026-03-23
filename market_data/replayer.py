@@ -8,10 +8,9 @@ from collections.abc import Iterator
 
 # Custom
 from .source import MarketDataSource
-from common.enums import EventEnum
 from events.payloads import MarketDataPayload
 from core.engine import Engine
-from events.event import Event
+from events.event import Event, MarketDataEvent
 
 
 logger = logging.getLogger("engine")
@@ -96,9 +95,8 @@ class MarketDataReplayer:
     ) -> None:
         self._validate_ordering(current_ts=record.timestamp, last_ts=last_ts)
 
-        event = Event(
+        event = MarketDataEvent(
             timestamp=record.timestamp,
-            event_type=EventEnum.MARKET_DATA,
             payload=record,
         )
 
