@@ -59,19 +59,22 @@ class OrderManager:
 
     def handle_signal(self, signal: Signal, time: int) -> None:
         if isinstance(signal, AddSignal):
-            temp_order = OrderPayload(
-                timestamp=time,
-                symbol=signal.symbol,
-                side=signal.side,
-                quantity=signal.quantity,
-                order_type=signal.type,
-                order_id=self.order_id,
-                price=signal.price,
+            self.add_order(
+                order=OrderPayload(
+                    timestamp=time,
+                    symbol=signal.symbol,
+                    side=signal.side,
+                    quantity=signal.quantity,
+                    order_type=signal.type,
+                    order_id=self.order_id,
+                    price=signal.price,
+                    take_profit=signal.take_profit,
+                    stop_loss=signal.stop_loss,
+                )
             )
-            self.add_order(order=temp_order)
             self.order_id += 1
 
-    def on_event(self, event: Event) -> Sequence[OrderFillPayload]:
+    def on_event(self, event: Event) -> Sequence[OrderFillPayload] | Sequence:
         if isinstance(event, MarketDataEvent):
-            return self.handle_market_data(data=event.payload)  # type: ignore
+            return self.handle_market_data(data=event.payload)
         return []

@@ -15,6 +15,8 @@ class OrderPayload:
     quantity: Quantity
     order_type: OrderType
     price: Price
+    take_profit: Price | None = None
+    stop_loss: Price | None = None
 
 
 @dataclass(frozen=True, slots=True)

@@ -1,10 +1,15 @@
 # STL
 from collections import defaultdict
-from collections.abc import MutableSequence, MutableMapping, Callable
+from collections.abc import (
+    MutableSequence,
+    MutableMapping,
+    Callable,
+    MutableSet,
+)
 import logging
 
 # Custom
-from events.event import Event
+from events.event import Event, MarketDataEvent, OrderFillEvent, TimerEvent
 from strategies.signal import Signal
 from .clock import Clock
 from .event_queue import EventQueue
@@ -12,15 +17,40 @@ from .portfolio import Portfolio
 from .order_manager import OrderManager
 from .position_manager import PositionManager
 from strategies import Strategy
-from strategies.strategy_enum import StrategyEnum
 from common.types import Cash
 
 type Handler = Callable[[Event], None]
 type Handlers = MutableSequence[Handler]
-type Strategies = MutableMapping[StrategyEnum, list[Strategy]]
-
+type Strategies = MutableMapping[int, Strategy]
 
 logger: logging.Logger = logging.getLogger("engine")
+
+
+class StrategyHandler:
+    __slots__ = ("_strategies",)
+
+    def __init__(self) -> None:
+        self._strategies: Strategies = defaultdict(Strategy)
+
+    def add_strategy(self, strategy: Strategy) -> bool:
+        key = hash(strategy)
+        if key in self._strategies:
+            return False
+        self._strategies[key] = strategy
+        return True
+
+    def remove_strategy(self, key: int) -> bool:
+        if key not in self._strategies:
+            return False
+        self._strategies.pop(key)
+        return True
+
+    def run_all_strategy(self, event: Event) -> list[Signal]:
+        return [
+            signal
+            for strategy in self._strategies.values()
+            if (signal := strategy.on_event(event=event)) is not None
+        ]
 
 
 class Engine:
@@ -32,7 +62,7 @@ class Engine:
     def _setup(self) -> None:
         self._queue: EventQueue = EventQueue()
         self._clock: Clock = Clock()
-        self._strategies: Strategies = defaultdict(list)
+        self._strategy_handler = StrategyHandler()
         self._portfolio = Portfolio(initial_capital=self._initial_cash)
         self._orderManager = OrderManager()
         self._positionManager = PositionManager(initial_cash=self._initial_cash)
@@ -44,19 +74,9 @@ class Engine:
     def push_event(self, event: Event) -> None:
         self._queue.push(event=event)
 
-    def register_strategy(self, strategy: Strategy) -> None:
-        self._strategies[strategy.strategy_id].append(strategy)
-
-    def unregister_strategy(self, strategy_id: StrategyEnum) -> None:
-        self._strategies.pop(strategy_id)
-
-    def start(self) -> None:
-        self._running = True
-        logger.info("engine started running")
-
     def run(self) -> None:
-        self.start()
-        while self._running and len(self._queue) > 0:
+        logger.info("engine started running")
+        while len(self._queue) > 0:
             event = self._queue.pop()
             self._clock.advance_to(timestamp=event.timestamp)
 
@@ -65,23 +85,12 @@ class Engine:
                 event.timestamp,
             )
 
-            orders = self._orderManager.on_event(event=event)
+            if orders := self._orderManager.on_event(event=event):
+                self._positionManager.on_fill_sequence(fills=orders)
 
-            for strategy_id, strategies in self._strategies.items():
-                for strategy in strategies:
-                    logger.info("on event %s", strategy_id)
-                    signal: Signal = strategy.on_event(event=event)
-                    self._orderManager.handle_signal(
-                        signal=signal, time=self._clock.now
-                    )
+            for signal in self._strategy_handler.run_all_strategy(event=event):
+                self._orderManager.handle_signal(
+                    signal=signal, time=self._clock.now
+                )
 
-            self._positionManager.on_fill_sequence(orders)
-
-        self.stop()
-
-    def update_portfolio(self) -> None:
-        pass
-
-    def stop(self) -> None:
-        self._running = False
         logger.info("engine stopped running")

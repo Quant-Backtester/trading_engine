@@ -4,20 +4,17 @@ from strategies.signal import AddSignal, NullSignal, Signal
 from common.enums import OrderType, Side
 
 from .strategy import Strategy
-from .strategy_enum import StrategyEnum
 from common.types import Quantity, Symbol
 
 
 class DCA(Strategy):
     def __init__(self, buyframe: int, buy_amount: Quantity) -> None:
-        super().__init__()
         self._buyframe = buyframe
         self._buy_amount = buy_amount
         self._last_buy_time: int | None = None
 
-    @property
-    def strategy_id(self) -> StrategyEnum:
-        return StrategyEnum.DCA
+    def get_hash_key(self) -> tuple[object, ...]:
+        return (self._buy_amount, self._buyframe)
 
     def on_event(self, event: Event) -> Signal:
         currnet_time = event.timestamp
@@ -30,7 +27,7 @@ class DCA(Strategy):
                 type=OrderType.MARKET,
                 price=event.payload.price,
                 symbol=event.payload.symbol,
-                quantity=self._buy_amount
+                quantity=self._buy_amount,
             )
 
         return NullSignal()

@@ -29,7 +29,7 @@ class MarketDataReplayer:
 
     def _replay_in_chunk(self, engine: Engine) -> None:
         for chunk, chunk_num in self._generate_chunks():
-            self._process_chunk(engine, chunk, chunk_num)
+            self._process_chunk(engine=engine, chunk=chunk, chunk_number=chunk_num)
 
     def _generate_chunks(self) -> Iterator[tuple[list[MarketDataPayload], int]]:
         buffer = []

@@ -21,8 +21,8 @@ class AddSignal(Signal):
     type: OrderType
     price: Price
     quantity: Quantity
-    takeProfit: Price | None = None
-    stopLoss: Price | None = None
+    take_profit: Price | None = None
+    stop_loss: Price | None = None
 
 
 @dataclass(slots=True, frozen=True)

@@ -1,35 +1,50 @@
 # STL
+from collections import defaultdict
 from collections.abc import MutableMapping, Sequence
-
+from dataclasses import dataclass, field
 
 # Custom
 from events.payloads import OrderFillPayload, MarketDataPayload
-from common.types import Price, Symbol, Cash, Quantity
-from .position import Position
+from common.types import Percentage, Price, Symbol, Cash, Quantity
 from common.enums import Side
 
-type Positions = MutableMapping[Symbol, Position]
+
+@dataclass(slots=True)
+class SymbolPositionGroup:
+    price: Price
+    positions: list[OrderFillPayload] = field(default_factory=list)
+
+    @property
+    def total_quantity(self) -> Quantity:
+        return sum(p.fill_quantity for p in self.positions)
+
+    @property
+    def avg_price(self) -> Price:
+        total_quantity = self.total_quantity
+        if total_quantity == 0:
+            return 0.0
+
+        return (
+            sum(p.fill_quantity * p.fill_price for p in self.positions)
+            / total_quantity
+        )
 
 
 class PositionManager:
-    __slots__ = "_positions", "_cash", "_realized_pnl"
+    __slots__ = ("_positions", "_cash", "_realized_pnl")
 
     def __init__(self, initial_cash: Cash = 0.0) -> None:
-        self._positions: Positions = {}
         self._cash: Cash = initial_cash
         self._realized_pnl: Cash = 0.0
 
-    def get_position(self, symbol: Symbol) -> Position | None:
-        return self._positions.get(symbol)
-
+    def get_position(self, symbol: Symbol) -> list[Position] | None:
+        return self._positions.get(symbol, None)
 
     def _set_new_position(self, symbol: Symbol) -> Position:
         pos = self.get_position(symbol=symbol)
-        if pos is not None:
-            return pos
         pos = Position(symbol=symbol)
-        self._positions[symbol] = pos
-        return self._positions[symbol]
+        self._positions[symbol].append(pos)
+        return pos
 
     def on_market_data(self, md: MarketDataPayload) -> None:
         pos = self._positions.get(md.symbol)
@@ -135,11 +150,9 @@ class PositionManager:
             pos.quantity = new_qty
             pos.avg_price = price
 
-
     def on_fill_sequence(self, fills: Sequence[OrderFillPayload]) -> None:
         for fill in fills:
             self.on_fill(fill=fill)
-            
 
     def on_fill(self, fill: OrderFillPayload) -> None:
         self._validate_fill(fill=fill)
@@ -162,3 +175,6 @@ class PositionManager:
         self._apply_cash_update(
             side=order.side, qty=fill.fill_quantity, price=fill.fill_price
         )
+
+    def close_position(self) -> list[OrderFillPayload]:
+        return []
