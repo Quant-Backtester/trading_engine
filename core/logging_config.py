@@ -6,7 +6,6 @@ from typing import NotRequired, TypedDict
 
 # Custom
 
-
 class EngineLogRecord(TypedDict):
     timestamp: str
     level: str

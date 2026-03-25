@@ -30,6 +30,7 @@ class DCA(Strategy):
                 type=OrderType.MARKET,
                 price=event.payload.price,
                 symbol=event.payload.symbol,
+                quantity=self._buy_amount
             )
 
         return NullSignal()
@@ -38,7 +39,6 @@ class DCA(Strategy):
         if self._last_buy_time is None:
             return True
 
-        # Simple integer comparison
         time_since_last_buy = current_timestamp - self._last_buy_time
         return time_since_last_buy >= self._buyframe
 

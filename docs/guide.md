@@ -70,12 +70,6 @@ The primary goals are:
 3. **Payloads are typed:**
    - Use dataclasses or typed dictionaries. Avoid raw `dict`.
 
-4. **EventEnum is exhaustive:**
-   Adding a new event type requires:
-   - Enum entry
-   - Engine handler
-   - Test
-
 ---
 
 ### 5. Engine rules
@@ -169,7 +163,7 @@ The primary goals are:
    - Prefer fake implementations.
 
 5. **Coverage**
-   - goal is to have 100% coverage. 
+   - goal is to have 100% coverage.
 
 ---
 

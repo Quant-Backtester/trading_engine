@@ -16,14 +16,14 @@ logger = logging.getLogger("engine")
 
 
 class OrderManager:
-    __slots__ = ("_orders",)
+    __slots__ = ("_orders", "order_id")
 
     def __init__(self) -> None:
         self._orders: OrderMapping = {}
+        self.order_id = 1
 
     def remove_order(self, order_id: OrderId) -> None:
         self._orders.pop(order_id)
-
 
     def add_order(self, order: OrderPayload) -> None:
         if self._orders[order.order_id]:
@@ -59,8 +59,17 @@ class OrderManager:
 
     def handle_signal(self, signal: Signal, time: int) -> None:
         if isinstance(signal, AddSignal):
-            temp = OrderPayload(timestamp=time, symbol=signal.symbol,side=signal.side, quantity=signal.quantity, order_type=signal.type)
-            self.add_order(order=temp)
+            temp_order = OrderPayload(
+                timestamp=time,
+                symbol=signal.symbol,
+                side=signal.side,
+                quantity=signal.quantity,
+                order_type=signal.type,
+                order_id=self.order_id,
+                price=signal.price,
+            )
+            self.add_order(order=temp_order)
+            self.order_id += 1
 
     def on_event(self, event: Event) -> Sequence[OrderFillPayload]:
         if isinstance(event, MarketDataEvent):

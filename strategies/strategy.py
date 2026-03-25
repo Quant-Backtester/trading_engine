@@ -15,3 +15,5 @@ class Strategy(ABC):
 
     @abstractmethod
     def on_event(self, event: Event) -> Signal: ...
+
+

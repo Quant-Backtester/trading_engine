@@ -5,7 +5,6 @@ import logging
 
 # Custom
 from events.event import Event
-from common.enums import EventEnum
 from strategies.signal import Signal
 from .clock import Clock
 from .event_queue import EventQueue
@@ -18,8 +17,7 @@ from common.types import Cash
 
 type Handler = Callable[[Event], None]
 type Handlers = MutableSequence[Handler]
-type Dispatcher = MutableMapping[EventEnum, Handlers]
-type Strategies = MutableMapping[StrategyEnum, Strategy]
+type Strategies = MutableMapping[StrategyEnum, list[Strategy]]
 
 
 logger: logging.Logger = logging.getLogger("engine")
@@ -34,12 +32,10 @@ class Engine:
     def _setup(self) -> None:
         self._queue: EventQueue = EventQueue()
         self._clock: Clock = Clock()
-        self._strategies: Strategies = {}
+        self._strategies: Strategies = defaultdict(list)
         self._portfolio = Portfolio(initial_capital=self._initial_cash)
         self._orderManager = OrderManager()
         self._positionManager = PositionManager(initial_cash=self._initial_cash)
-
-
 
     def reset(self) -> None:
         self._setup()
@@ -49,7 +45,7 @@ class Engine:
         self._queue.push(event=event)
 
     def register_strategy(self, strategy: Strategy) -> None:
-        self._strategies[strategy.strategy_id] = strategy
+        self._strategies[strategy.strategy_id].append(strategy)
 
     def unregister_strategy(self, strategy_id: StrategyEnum) -> None:
         self._strategies.pop(strategy_id)
@@ -71,10 +67,13 @@ class Engine:
 
             orders = self._orderManager.on_event(event=event)
 
-            for strategy_id, strategy in self._strategies.items():
-                logger.info("on event %s", strategy_id)
-                signal: Signal = strategy.on_event(event=event)
-                self._orderManager.handle_signal(signal=signal, self._clock.now())
+            for strategy_id, strategies in self._strategies.items():
+                for strategy in strategies:
+                    logger.info("on event %s", strategy_id)
+                    signal: Signal = strategy.on_event(event=event)
+                    self._orderManager.handle_signal(
+                        signal=signal, time=self._clock.now
+                    )
 
             self._positionManager.on_fill_sequence(orders)
 
