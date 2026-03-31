@@ -65,7 +65,7 @@ class Engine:
         self._strategy_handler = StrategyHandler()
         self._portfolio = Portfolio(initial_capital=self._initial_cash)
         self._orderManager = OrderManager()
-        self._positionManager = PositionManager(initial_cash=self._initial_cash)
+        self._positionManager = PositionManager(_cash=self._initial_cash)
 
     def reset(self) -> None:
         self._setup()
@@ -92,5 +92,7 @@ class Engine:
                 self._orderManager.handle_signal(
                     signal=signal, time=self._clock.now
                 )
+
+            
 
         logger.info("engine stopped running")

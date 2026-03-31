@@ -1,22 +1,29 @@
 # STL
-from collections import defaultdict
 from collections.abc import MutableMapping, Sequence
 from dataclasses import dataclass, field
 
 # Custom
 from events.payloads import OrderFillPayload, MarketDataPayload
-from common.types import Percentage, Price, Symbol, Cash, Quantity
+from common.types import OrderId, Percentage, Price, Symbol, Cash, Quantity
 from common.enums import Side
 
 
 @dataclass(slots=True)
 class SymbolPositionGroup:
-    price: Price
-    positions: list[OrderFillPayload] = field(default_factory=list)
+    price: Price = 0.0
+    positions: MutableMapping[OrderId, OrderFillPayload] = field(
+        default_factory=dict
+    )
+
+    def add_new_position(self, position: OrderFillPayload) -> None:
+        self.positions[position.order.order_id] = position
+
+    def remove_positon(self, order_id: OrderId) -> OrderFillPayload | None:
+        return self.positions.pop(order_id)
 
     @property
     def total_quantity(self) -> Quantity:
-        return sum(p.fill_quantity for p in self.positions)
+        return sum(p.fill_quantity for p in self.positions.values())
 
     @property
     def avg_price(self) -> Price:
@@ -25,33 +32,34 @@ class SymbolPositionGroup:
             return 0.0
 
         return (
-            sum(p.fill_quantity * p.fill_price for p in self.positions)
+            sum(p.fill_quantity * p.fill_price for p in self.positions.values())
             / total_quantity
         )
 
 
+type PositionMapping = MutableMapping[Symbol, SymbolPositionGroup]
+
+
+@dataclass(slots=True)
 class PositionManager:
-    __slots__ = ("_positions", "_cash", "_realized_pnl")
+    _cash: Cash = 0.0
+    _positions: PositionMapping = field(default_factory=dict)
+    _realized_pnl: Cash = 0.0
 
-    def __init__(self, initial_cash: Cash = 0.0) -> None:
-        self._cash: Cash = initial_cash
-        self._realized_pnl: Cash = 0.0
+    def __post_init__(self):
+        if not isinstance(self._cash, (int, float)):
+            self._cash = float(self._cash)
 
-    def get_position(self, symbol: Symbol) -> list[Position] | None:
-        return self._positions.get(symbol, None)
+    def get_positions(
+        self, symbol: Symbol
+    ) -> MutableMapping[OrderId, OrderFillPayload] | None:
+        group = self._positions.get(symbol)
+        return group.positions if group is not None else None
 
-    def _set_new_position(self, symbol: Symbol) -> Position:
-        pos = self.get_position(symbol=symbol)
-        pos = Position(symbol=symbol)
-        self._positions[symbol].append(pos)
-        return pos
-
-    def on_market_data(self, md: MarketDataPayload) -> None:
-        pos = self._positions.get(md.symbol)
-        if pos is None:
-            return
-
-        pos.last_price = md.price
+    def on_market_data(self, md: MarketDataPayload) -> None:  # type: ignore
+        group = self._positions.get(md.symbol)
+        if group is not None:
+            group.price = md.price
 
     @property
     def cash(self) -> Cash:
@@ -63,12 +71,15 @@ class PositionManager:
 
     @property
     def total_unrealized_pnl(self) -> Cash:
-        return sum(pos.unrealized_pnl for pos in self._positions.values())
+        return sum(
+            self._calculate_unrealized_pnl_for_group(group)
+            for group in self._positions.values()
+        )
 
     @staticmethod
     def _validate_fill(fill: OrderFillPayload) -> None:
-        assert fill.fill_quantity > 0
-        assert fill.fill_price > 0
+        assert fill.fill_quantity > 0, "Fill quantity must be positive"
+        assert fill.fill_price > 0, "Fill price must be positive"
         assert isinstance(fill.order.side, Side)
 
     @staticmethod
@@ -79,23 +90,17 @@ class PositionManager:
             else -fill.fill_quantity
         )
 
-    @staticmethod
-    def _is_open_or_add(pos: Position, signed_qty: Quantity) -> bool:
-        return pos.quantity == 0 or pos.quantity * signed_qty > 0
+    def _get_or_create_group(self, symbol: Symbol) -> SymbolPositionGroup:
+        if symbol not in self._positions:
+            self._positions[symbol] = SymbolPositionGroup()
+        return self._positions[symbol]
 
-    @staticmethod
-    def _apply_open_or_add(
-        pos: Position,
-        signed_qty: Quantity,
-        price: Price,
-    ) -> None:
-        new_qty = pos.quantity + signed_qty
-
-        pos.avg_price = (
-            pos.avg_price * abs(pos.quantity) + price * abs(signed_qty)
-        ) / abs(new_qty)
-
-        pos.quantity = new_qty
+    def _calculate_unrealized_pnl_for_group(
+        self, group: SymbolPositionGroup
+    ) -> Cash:
+        if group.total_quantity == 0:
+            return 0.0
+        return group.total_quantity * (group.price - group.avg_price)
 
     @staticmethod
     def _calculate_realized_pnl(
@@ -108,10 +113,7 @@ class PositionManager:
         return closing_qty * (fill_price - avg_price) * direction
 
     def _apply_cash_update(
-        self,
-        side: Side,
-        qty: Quantity,
-        price: Price,
+        self, side: Side, qty: Quantity, price: Price
     ) -> None:
         trade_value = qty * price
         if side == Side.BUY:
@@ -119,62 +121,57 @@ class PositionManager:
         else:
             self._cash += trade_value
 
-    def _apply_reduce_or_flip(
-        self,
-        pos: Position,
-        signed_qty: Quantity,
-        price: Price,
-    ) -> None:
-        closing_qty = min(abs(pos.quantity), abs(signed_qty))
-
-        pnl: Cash = self._calculate_realized_pnl(
-            pos_qty=pos.quantity,
-            avg_price=pos.avg_price,
-            closing_qty=closing_qty,
-            fill_price=price,
-        )
-
-        self._realized_pnl += pnl
-
-        new_qty = pos.quantity + signed_qty
-
-        if pos.quantity * new_qty > 0:
-            # Partial close
-            pos.quantity = new_qty
-        elif new_qty == 0:
-            # Fully closed
-            pos.quantity = 0
-            pos.avg_price = 0.0
-        else:
-            # Flipped
-            pos.quantity = new_qty
-            pos.avg_price = price
-
-    def on_fill_sequence(self, fills: Sequence[OrderFillPayload]) -> None:
-        for fill in fills:
-            self.on_fill(fill=fill)
-
     def on_fill(self, fill: OrderFillPayload) -> None:
-        self._validate_fill(fill=fill)
+        self._validate_fill(fill)
 
         order = fill.order
         symbol = order.symbol
-        signed_qty = self._signed_quantity(fill=fill)
+        signed_qty = self._signed_quantity(fill)
 
-        pos = self._set_new_position(symbol=symbol)
+        group = self._get_or_create_group(symbol)
 
-        if self._is_open_or_add(pos=pos, signed_qty=signed_qty):
-            self._apply_open_or_add(
-                pos=pos, signed_qty=signed_qty, price=fill.fill_price
-            )
-        else:
-            self._apply_reduce_or_flip(
-                pos=pos, signed_qty=signed_qty, price=fill.fill_price
-            )
+        group.add_new_position(fill)
 
         self._apply_cash_update(
             side=order.side, qty=fill.fill_quantity, price=fill.fill_price
         )
 
-    def close_position(self) -> list[OrderFillPayload]:
-        return []
+    def on_fill_sequence(self, fills: Sequence[OrderFillPayload]) -> None:
+        for fill in fills:
+            self.on_fill(fill)
+
+    def close_position(
+        self, symbol: Symbol, order_id: OrderId
+    ) -> OrderFillPayload | None:
+        group = self._positions.get(symbol)
+        if group is None:
+            return
+
+        return self._positions[symbol].remove_positon(order_id=order_id)
+
+    def close_positions(self, symbol: Symbol) -> list[OrderFillPayload]:
+        """Placeholder - implement full close logic if needed"""
+        group = self._positions.get(symbol)
+        if group is None:
+            return []
+        # Return copy of current fills and clear the group
+        closed = list(group.positions.values())
+        self._positions.pop(symbol, None)
+        return closed
+
+    def get_net_position(self, symbol: Symbol) -> dict:
+        group = self._positions.get(symbol)
+        if not group or group.total_quantity == 0:
+            return {
+                "quantity": 0.0,
+                "avg_price": 0.0,
+                "current_price": 0.0,
+                "unrealized_pnl": 0.0,
+            }
+
+        return {
+            "quantity": group.total_quantity,
+            "avg_price": group.avg_price,
+            "current_price": group.price,
+            "unrealized_pnl": self._calculate_unrealized_pnl_for_group(group),
+        }
