@@ -21,3 +21,9 @@ class Strategy(ABC):
 
     def __hash__(self) -> int:
         return hash(self.get_hash_key())
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__}>"
+
+    def __str__(self) -> str:
+        return self.__class__.__name__

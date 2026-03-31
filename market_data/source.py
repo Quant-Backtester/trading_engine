@@ -7,17 +7,8 @@ import csv
 from datetime import datetime
 
 # Custom
+from common.mixins import ReprMixin
 from events.payloads import MarketDataPayload
-
-
-class SourceReprMixin:
-    __slots__ = ()
-
-    def __str__(self) -> str:
-        return self.__class__.__name__
-
-    def __repr__(self) -> str:
-        return f"<{self.__class__}>"
 
 
 @runtime_checkable
@@ -27,7 +18,7 @@ class MarketDataSource[T: MarketDataPayload](Protocol):
     def __iter__(self) -> Iterator[T]: ...
 
 
-class FakeMarketDataSource(SourceReprMixin, MarketDataSource):
+class FakeMarketDataSource(ReprMixin, MarketDataSource):
     __slots__ = ("_records",)
 
     def __init__(self, records):
@@ -37,7 +28,7 @@ class FakeMarketDataSource(SourceReprMixin, MarketDataSource):
         return iter(self._records)
 
 
-class CSVMarketDataSource(SourceReprMixin, MarketDataSource):
+class CSVMarketDataSource(ReprMixin, MarketDataSource):
     __slots__ = "_path", "_symbol"
     column_mappings = {
         "price": ["price", "Price", "close", "Close"],
@@ -54,7 +45,9 @@ class CSVMarketDataSource(SourceReprMixin, MarketDataSource):
             yield from self._read_csv_file(file=file)
 
     def _find_column(
-        self, available_columns: Sequence[str] | None, possible_names: Sequence[str]
+        self,
+        available_columns: Sequence[str] | None,
+        possible_names: Sequence[str],
     ) -> str | None:
         if available_columns is None:
             return None
@@ -80,13 +73,14 @@ class CSVMarketDataSource(SourceReprMixin, MarketDataSource):
                 )
             actual_columns[payload_field] = found_col
 
-
         for row in reader:
             yield MarketDataPayload(
                 symbol=self._symbol,
                 price=float(row[actual_columns["price"]]),
                 volume=int(row[actual_columns["volume"]]),
-                timestamp=self.convert_timestamp(timestamp=row[actual_columns["timestamp"]]),
+                timestamp=self.convert_timestamp(
+                    timestamp=row[actual_columns["timestamp"]]
+                ),
             )
 
     @staticmethod
@@ -97,9 +91,9 @@ class CSVMarketDataSource(SourceReprMixin, MarketDataSource):
         return date_int
 
 
-class DBMarketDataSource(SourceReprMixin, MarketDataSource):
+class DBMarketDataSource(ReprMixin, MarketDataSource):
     pass
 
 
-class JsonMarketDataSource(SourceReprMixin, MarketDataPayload):
+class JsonMarketDataSource(ReprMixin, MarketDataPayload):
     pass

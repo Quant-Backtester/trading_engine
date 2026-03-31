@@ -4,7 +4,7 @@ import logging
 from events.payloads import OrderPayload, OrderFillPayload
 from common.types import OrderId
 from events.event import Event, MarketDataEvent
-from common.enums import Side
+from common.enums import OrderType, Side
 from events.payloads import MarketDataPayload
 from strategies.signal import AddSignal, Signal
 
@@ -26,7 +26,7 @@ class OrderManager:
         self._orders.pop(order_id)
 
     def add_order(self, order: OrderPayload) -> None:
-        if self._orders[order.order_id]:
+        if self._orders.get(order.order_id):
             logger.info("order %s already exist.", order.order_id)
             return
         self._orders[order.order_id] = order
@@ -46,14 +46,20 @@ class OrderManager:
                 fill_timestamp=data.timestamp,
             )
 
-        filled_order: Sequence = []
+        filled_order: list[OrderFillPayload] = []
+        to_remove: list[OrderId] = []
         price = data.price
         for order in self._orders.values():
-            if (order.side == Side.BUY and order.price >= price) or (
-                order.side == Side.SELL and order.price <= price
+            if (
+                (order.side == Side.BUY and order.price >= price)
+                or (order.side == Side.SELL and order.price <= price)
+                or (order.order_type == OrderType.MARKET)
             ):
                 filled_order.append(get_order_fill(order=order, data=data))
-                self.remove_order(order.order_id)
+                to_remove.append(order.order_id)
+
+        for order_id in to_remove:
+            self.remove_order(order_id=order_id)
 
         return filled_order
 

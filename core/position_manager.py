@@ -1,11 +1,15 @@
 # STL
 from collections.abc import MutableMapping, Sequence
 from dataclasses import dataclass, field
+import logging
 
 # Custom
 from events.payloads import OrderFillPayload, MarketDataPayload
 from common.types import OrderId, Percentage, Price, Symbol, Cash, Quantity
 from common.enums import Side
+
+
+logger = logging.getLogger("engine")
 
 
 @dataclass(slots=True)
@@ -122,19 +126,20 @@ class PositionManager:
             self._cash += trade_value
 
     def on_fill(self, fill: OrderFillPayload) -> None:
-        self._validate_fill(fill)
+        self._validate_fill(fill=fill)
 
         order = fill.order
         symbol = order.symbol
-        signed_qty = self._signed_quantity(fill)
 
-        group = self._get_or_create_group(symbol)
+        group = self._get_or_create_group(symbol=symbol)
 
         group.add_new_position(fill)
 
         self._apply_cash_update(
             side=order.side, qty=fill.fill_quantity, price=fill.fill_price
         )
+
+        logger.info('filled order %s', OrderFillPayload)
 
     def on_fill_sequence(self, fills: Sequence[OrderFillPayload]) -> None:
         for fill in fills:
@@ -150,11 +155,9 @@ class PositionManager:
         return self._positions[symbol].remove_positon(order_id=order_id)
 
     def close_positions(self, symbol: Symbol) -> list[OrderFillPayload]:
-        """Placeholder - implement full close logic if needed"""
         group = self._positions.get(symbol)
         if group is None:
             return []
-        # Return copy of current fills and clear the group
         closed = list(group.positions.values())
         self._positions.pop(symbol, None)
         return closed

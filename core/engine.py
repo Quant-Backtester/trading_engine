@@ -9,6 +9,7 @@ from collections.abc import (
 import logging
 
 # Custom
+from core.strategy_handler import StrategyHandler
 from events.event import Event, MarketDataEvent, OrderFillEvent, TimerEvent
 from strategies.signal import Signal
 from .clock import Clock
@@ -19,38 +20,8 @@ from .position_manager import PositionManager
 from strategies import Strategy
 from common.types import Cash
 
-type Handler = Callable[[Event], None]
-type Handlers = MutableSequence[Handler]
-type Strategies = MutableMapping[int, Strategy]
 
 logger: logging.Logger = logging.getLogger("engine")
-
-
-class StrategyHandler:
-    __slots__ = ("_strategies",)
-
-    def __init__(self) -> None:
-        self._strategies: Strategies = defaultdict(Strategy)
-
-    def add_strategy(self, strategy: Strategy) -> bool:
-        key = hash(strategy)
-        if key in self._strategies:
-            return False
-        self._strategies[key] = strategy
-        return True
-
-    def remove_strategy(self, key: int) -> bool:
-        if key not in self._strategies:
-            return False
-        self._strategies.pop(key)
-        return True
-
-    def run_all_strategy(self, event: Event) -> list[Signal]:
-        return [
-            signal
-            for strategy in self._strategies.values()
-            if (signal := strategy.on_event(event=event)) is not None
-        ]
 
 
 class Engine:
@@ -67,6 +38,13 @@ class Engine:
         self._orderManager = OrderManager()
         self._positionManager = PositionManager(_cash=self._initial_cash)
 
+    def add_strategy(self, strategy: Strategy) -> bool:
+        if state := self._strategy_handler.add_strategy(strategy=strategy):
+            logger.info("added strategy: %s", strategy)
+            return state
+        logger.info("failed to add strategy: %s", strategy)
+        return state
+
     def reset(self) -> None:
         self._setup()
         logger.info("reset sucessfully")
@@ -77,22 +55,27 @@ class Engine:
     def run(self) -> None:
         logger.info("engine started running")
         while len(self._queue) > 0:
-            event = self._queue.pop()
+            event: MarketDataEvent | OrderFillEvent | TimerEvent = (
+                self._queue.pop()
+            )
             self._clock.advance_to(timestamp=event.timestamp)
 
-            logger.debug(
-                "Dispatching event: type=%s ts=%d",
-                event.timestamp,
+            logger.info(
+                "Dispatching event: type=%s ts=%d", event, event.timestamp
             )
 
-            if orders := self._orderManager.on_event(event=event):
-                self._positionManager.on_fill_sequence(fills=orders)
+            self.fill_submitted_orders(event=event)
 
-            for signal in self._strategy_handler.run_all_strategy(event=event):
-                self._orderManager.handle_signal(
-                    signal=signal, time=self._clock.now
-                )
-
-            
+            self.run_strategies(event=event)
 
         logger.info("engine stopped running")
+
+    def fill_submitted_orders(self, event: Event):
+        if orders := self._orderManager.on_event(event=event):
+            self._positionManager.on_fill_sequence(fills=orders)
+
+    def run_strategies(self, event: Event) -> None:
+        for signal in self._strategy_handler.run_all_strategy(event=event):
+            self._orderManager.handle_signal(
+                signal=signal, time=self._clock.now
+            )

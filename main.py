@@ -7,6 +7,7 @@ from argparse import _SubParsersAction
 from core import setup_engine_logging, Engine
 from market_data.replayer import MarketDataReplayer
 from market_data import CSVMarketDataSource
+from strategies.dca import DCA
 
 
 def config_csv_parser(
@@ -62,6 +63,7 @@ def main() -> None:
     args = parser.parse_args()
 
     engine = Engine(initial_cash=args.cash)
+    engine.add_strategy(strategy=DCA(buyframe=10,buy_amount=20))
     replayer = MarketDataReplayer()
     if args.mode == "csv":
         replayer.set_market_data_source(
@@ -74,7 +76,7 @@ def main() -> None:
         # json handler
         pass
 
-    
+
 
     replayer.replay(engine=engine, chunked=True)
 

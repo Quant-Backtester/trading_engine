@@ -4,13 +4,13 @@ from strategies.signal import AddSignal, NullSignal, Signal
 from common.enums import OrderType, Side
 
 from .strategy import Strategy
-from common.types import Quantity, Symbol
+from common.types import Quantity
 
 
 class DCA(Strategy):
     def __init__(self, buyframe: int, buy_amount: Quantity) -> None:
-        self._buyframe = buyframe
-        self._buy_amount = buy_amount
+        self._buyframe: int = buyframe
+        self._buy_amount: Quantity = buy_amount
         self._last_buy_time: int | None = None
 
     def get_hash_key(self) -> tuple[object, ...]:
@@ -19,9 +19,10 @@ class DCA(Strategy):
     def on_event(self, event: Event) -> Signal:
         currnet_time = event.timestamp
 
-        if self._should_buy(currnet_time) and isinstance(
+        if self._should_buy(current_timestamp=currnet_time) and isinstance(
             event.payload, MarketDataPayload
         ):
+            self._last_buy_time = currnet_time
             return AddSignal(
                 side=Side.BUY,
                 type=OrderType.MARKET,
@@ -36,8 +37,8 @@ class DCA(Strategy):
         if self._last_buy_time is None:
             return True
 
-        time_since_last_buy = current_timestamp - self._last_buy_time
-        return time_since_last_buy >= self._buyframe
+        time_since_last_buy: int = current_timestamp - self._last_buy_time
+        return time_since_last_buy > self._buyframe
 
     def get_next_buy_time(self) -> int | None:
         if self._last_buy_time is None:
