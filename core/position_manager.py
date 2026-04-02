@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 import logging
 
 # Custom
+from events.event import Event, MarketDataEvent
 from events.payloads import OrderFillPayload, MarketDataPayload
 from common.types import OrderId, Percentage, Price, Symbol, Cash, Quantity
 from common.enums import Side
@@ -64,6 +65,14 @@ class PositionManager:
         group = self._positions.get(md.symbol)
         if group is not None:
             group.price = md.price
+
+        self.tp_or_sl(md.symbol)
+
+    def on_event(self, event: Event) -> bool:
+        if isinstance(event, MarketDataEvent):
+            self.on_market_data(event.payload)
+            return True
+        return False
 
     @property
     def cash(self) -> Cash:
@@ -139,7 +148,7 @@ class PositionManager:
             side=order.side, qty=fill.fill_quantity, price=fill.fill_price
         )
 
-        logger.info('filled order %s', OrderFillPayload)
+        logger.info("filled order %s", OrderFillPayload)
 
     def on_fill_sequence(self, fills: Sequence[OrderFillPayload]) -> None:
         for fill in fills:
@@ -178,3 +187,71 @@ class PositionManager:
             "current_price": group.price,
             "unrealized_pnl": self._calculate_unrealized_pnl_for_group(group),
         }
+
+    def _handle_take_profit(
+        self, current_price: Price, position: OrderFillPayload
+    ) -> OrderFillPayload | None:
+        take_profit_price = position.order.take_profit
+        order_id = position.order.order_id
+        if not take_profit_price:
+            return None
+        if (
+            position.order.side == Side.BUY
+            and current_price >= take_profit_price
+        ) or (
+            position.order.side == Side.SELL
+            and current_price <= take_profit_price
+        ):
+            logger.info(
+                f"Stop loss triggered for order {order_id} at price {current_price}"
+            )
+            return self.close_position(
+                symbol=position.order.symbol, order_id=order_id
+            )
+
+        return None
+
+    def _handle_stop_loss(
+        self, current_price: Price, position: OrderFillPayload
+    ) -> OrderFillPayload | None:
+        order_id = position.order.order_id
+        if not position.order.stop_loss:
+            return None
+        if (
+            position.order.side == Side.BUY
+            and current_price <= position.order.stop_loss
+        ) or (
+            position.order.side == Side.SELL
+            and current_price >= position.order.stop_loss
+        ):
+            logger.info(
+                f"Stop loss triggered for order {order_id} at price {current_price}"
+            )
+            return self.close_position(
+                symbol=position.order.symbol, order_id=order_id
+            )
+
+        return None
+
+    def tp_or_sl(self, symbol: Symbol) -> list[OrderFillPayload]:
+        position_group = self._positions.get(symbol)
+        if not position_group or position_group.total_quantity == 0:
+            return []
+
+        closed_positions = []
+
+        for order_id, position in list(position_group.positions.items()):
+            current_price = position_group.price
+
+
+            if tp_order := self._handle_take_profit(
+                current_price=current_price, position=position
+            ):
+                closed_positions.append(tp_order)
+
+            if sl_order := self._handle_take_profit(
+                current_price=current_price, position=position
+            ):
+                closed_positions.append(sl_order)
+
+        return closed_positions

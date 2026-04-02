@@ -60,6 +60,8 @@ class Engine:
             )
             self._clock.advance_to(timestamp=event.timestamp)
 
+            self._handle_event(event=event)
+
             logger.info(
                 "Dispatching event: type=%s ts=%d", event, event.timestamp
             )
@@ -69,6 +71,12 @@ class Engine:
             self.run_strategies(event=event)
 
         logger.info("engine stopped running")
+
+    def _handle_event(self, event: Event) -> None:
+        self._positionManager.on_event(event=event)
+
+    def close_positions(self) -> None:
+        pass
 
     def fill_submitted_orders(self, event: Event):
         if orders := self._orderManager.on_event(event=event):
