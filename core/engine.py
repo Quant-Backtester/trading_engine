@@ -1,11 +1,4 @@
 # STL
-from collections import defaultdict
-from collections.abc import (
-    MutableSequence,
-    MutableMapping,
-    Callable,
-    MutableSet,
-)
 import logging
 
 # Custom
@@ -58,31 +51,33 @@ class Engine:
             event: MarketDataEvent | OrderFillEvent | TimerEvent = (
                 self._queue.pop()
             )
-            self._clock.advance_to(timestamp=event.timestamp)
-
-            self._handle_event(event=event)
-
             logger.info(
                 "Dispatching event: type=%s ts=%d", event, event.timestamp
             )
 
-            self.fill_submitted_orders(event=event)
+            self._clock.advance_to(timestamp=event.timestamp)
 
-            self.run_strategies(event=event)
+            self._handle_event(event=event)
+
+            self._run_strategies(event=event)
 
         logger.info("engine stopped running")
 
     def _handle_event(self, event: Event) -> None:
-        self._positionManager.on_event(event=event)
+        self._close_trades(event=event)
 
-    def close_positions(self) -> None:
-        pass
+        self._fill_submitted_orders(event=event)
 
-    def fill_submitted_orders(self, event: Event):
+    def _close_trades(self, event: Event):
+        if closed_positions := self._positionManager.on_event(event=event):
+            self._portfolio.add_fills(closed_positions)
+            pass
+
+    def _fill_submitted_orders(self, event: Event):
         if orders := self._orderManager.on_event(event=event):
             self._positionManager.on_fill_sequence(fills=orders)
 
-    def run_strategies(self, event: Event) -> None:
+    def _run_strategies(self, event: Event) -> None:
         for signal in self._strategy_handler.run_all_strategy(event=event):
             self._orderManager.handle_signal(
                 signal=signal, time=self._clock.now

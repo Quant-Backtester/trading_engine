@@ -61,18 +61,18 @@ class PositionManager:
         group = self._positions.get(symbol)
         return group.positions if group is not None else None
 
-    def on_market_data(self, md: MarketDataPayload) -> None:  # type: ignore
+    def on_market_data(self, md: MarketDataPayload) -> list[OrderFillPayload]:
         group = self._positions.get(md.symbol)
         if group is not None:
             group.price = md.price
 
-        self.tp_or_sl(md.symbol)
+        return self.tp_or_sl(md.symbol)
 
-    def on_event(self, event: Event) -> bool:
+    def on_event(self, event: Event) -> list[OrderFillPayload]:
         if isinstance(event, MarketDataEvent):
-            self.on_market_data(event.payload)
-            return True
-        return False
+            return self.on_market_data(md=event.payload)
+
+        return []
 
     @property
     def cash(self) -> Cash:
@@ -242,7 +242,6 @@ class PositionManager:
 
         for order_id, position in list(position_group.positions.items()):
             current_price = position_group.price
-
 
             if tp_order := self._handle_take_profit(
                 current_price=current_price, position=position

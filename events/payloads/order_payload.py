@@ -6,7 +6,7 @@ from typing import Any, Self
 # Custom
 from common.enums import Side, OrderType
 from common.mixins import ReprMixin
-from common.types import OrderId, Symbol, Quantity, Price, Timestamp
+from common.types import Cash, OrderId, Symbol, Quantity, Price, Timestamp
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,3 +51,4 @@ class OrderFillPayload(ReprMixin):
     fill_price: Price
     fill_quantity: Quantity
     remaining_quantity: Quantity
+    commission: Cash = 0.0

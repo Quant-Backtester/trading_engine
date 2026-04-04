@@ -32,9 +32,9 @@ class OrderManager:
         self._orders[order.order_id] = order
         logger.info("order with OrderID: %s is setted", order.order_id)
 
-    def handle_market_data(
+    def on_market_data(
         self, data: MarketDataPayload
-    ) -> Sequence[OrderFillPayload | None]:
+    ) -> Sequence[OrderFillPayload]:
         def get_order_fill(
             order: OrderPayload, data: MarketDataPayload
         ) -> OrderFillPayload:
@@ -80,7 +80,7 @@ class OrderManager:
             )
             self.order_id += 1
 
-    def on_event(self, event: Event) -> Sequence[OrderFillPayload] | Sequence:
+    def on_event(self, event: Event) -> Sequence[OrderFillPayload]:
         if isinstance(event, MarketDataEvent):
-            return self.handle_market_data(data=event.payload)
+            return self.on_market_data(data=event.payload)
         return []

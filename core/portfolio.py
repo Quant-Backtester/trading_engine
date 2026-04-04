@@ -1,30 +1,11 @@
-from common.types import Percentage, Cash, Timestamp
+from collections.abc import Sequence
 
-from dataclasses import dataclass
+from common.enums import Side
+from common.types import Percentage, Cash, Price, Timestamp
 
+from dataclasses import dataclass, field
 
-@dataclass(slots=True)
-class Trade:
-    entry_price: Cash
-    exit_price: Cash
-    quantity: float
-    entry_time: Timestamp
-    exit_time: Timestamp
-    commission: Cash = 0.0
-
-    @property
-    def profit_loss(self) -> Cash:
-        return (
-            self.exit_price - self.entry_price
-        ) * self.quantity - self.commission
-
-    @property
-    def holding_period(self) -> Timestamp:
-        return self.exit_time - self.entry_time
-
-    @property
-    def is_winning(self) -> bool:
-        return self.profit_loss > 0
+from events.payloads.order_payload import OrderFillPayload, OrderPayload
 
 
 @dataclass(slots=True)
@@ -50,24 +31,77 @@ class TradingMetrics:
     max_drawdown: Percentage | None = None
 
 
+@dataclass(slots=True)
 class Portfolio:
-    def __init__(self, initial_capital: Cash) -> None:
-        self.initial_capital = initial_capital
-        self.current_capital = initial_capital
-        self._trades: list[Trade] = []
-        self._daily_returns: list[float] = []  # For advanced metrics
+    initial_capital: Cash
+    current_capital: Cash = field(init=False)
+    _trades: list[dict] = field(default_factory=list, init=False)
+    _daily_returns: list[float] = field(default_factory=list, init=False)
+
+    def __post_init__(self) -> None:
+        self.current_capital = self.initial_capital
+
+    def _determine_exit_type(
+        self, order: OrderPayload, current_price: Price
+    ) -> str:
+        if order.take_profit is not None and current_price >= order.take_profit:
+            return "take_profit"
+        elif order.stop_loss is not None and current_price <= order.stop_loss:
+            return "stop_loss"
+        return "manual"
+
+    def _calculate_trade_from_order(
+        self, order: OrderPayload, current_price: Price
+    ) -> dict:
+        entry_price = order.price
+        exit_price = current_price
+        quantity = order.quantity
+        commission = 0.0
+
+        if order.side == Side.BUY:
+            profit_loss = (exit_price - entry_price) * quantity - commission
+        else:
+            profit_loss = (entry_price - exit_price) * quantity - commission
+
+        exit_type = self._determine_exit_type(order, exit_price)
+
+        return {
+            "order_id": order.order_id,
+            "symbol": order.symbol,
+            "side": order.side,
+            "entry_price": entry_price,
+            "exit_price": exit_price,
+            "quantity": quantity,
+            "entry_time": order.timestamp,
+            "exit_time": order.timestamp,
+            "commission": commission,
+            "profit_loss": profit_loss,
+            "is_winning": profit_loss > 0,
+            "holding_period": 0,
+            "exit_type": exit_type,
+            "take_profit": order.take_profit,
+            "stop_loss": order.stop_loss,
+        }
 
     @property
     def total_trades(self) -> int:
         return len(self._trades)
 
     @property
-    def winning_trades(self) -> list[Trade]:
-        return [t for t in self._trades if t.is_winning]
+    def winning_trades(self) -> list[dict]:
+        return [t for t in self._trades if t["is_winning"]]
 
     @property
-    def losing_trades(self) -> list[Trade]:
-        return [t for t in self._trades if not t.is_winning]
+    def losing_trades(self) -> list[dict]:
+        return [t for t in self._trades if not t["is_winning"]]
+
+    @property
+    def take_profit_trades(self) -> list[dict]:
+        return [t for t in self._trades if t["exit_type"] == "take_profit"]
+
+    @property
+    def stop_loss_trades(self) -> list[dict]:
+        return [t for t in self._trades if t["exit_type"] == "stop_loss"]
 
     @property
     def winning_trades_count(self) -> int:
@@ -86,9 +120,19 @@ class Portfolio:
         )
 
     @property
-    def loss_rate(self) -> Percentage:
+    def take_profit_rate(self) -> Percentage:
+        tp_trades = len(self.take_profit_trades)
         return (
-            (self.losing_trades_count / self.total_trades) * 100
+            (tp_trades / self.total_trades) * 100
+            if self.total_trades > 0
+            else 0.0
+        )
+
+    @property
+    def stop_loss_rate(self) -> Percentage:
+        sl_trades = len(self.stop_loss_trades)
+        return (
+            (sl_trades / self.total_trades) * 100
             if self.total_trades > 0
             else 0.0
         )
@@ -98,26 +142,38 @@ class Portfolio:
         winning = self.winning_trades
         if not winning:
             return 0.0
-        return (
-            sum(t.profit_loss for t in winning) / len(winning)
-            if winning
-            else 0.0
-        )
+        return sum(t["profit_loss"] for t in winning) / len(winning)
 
     @property
     def avg_loss(self) -> Cash:
         losing = self.losing_trades
         return (
-            sum(t.profit_loss for t in losing) / len(losing) if losing else 0.0
+            sum(t["profit_loss"] for t in losing) / len(losing)
+            if losing
+            else 0.0
         )
 
     @property
+    def avg_take_profit_profit(self) -> Cash:
+        tp_trades = self.take_profit_trades
+        if not tp_trades:
+            return 0.0
+        return sum(t["profit_loss"] for t in tp_trades) / len(tp_trades)
+
+    @property
+    def avg_stop_loss_loss(self) -> Cash:
+        sl_trades = self.stop_loss_trades
+        if not sl_trades:
+            return 0.0
+        return sum(t["profit_loss"] for t in sl_trades) / len(sl_trades)
+
+    @property
     def total_profit(self) -> Cash:
-        return sum(t.profit_loss for t in self.winning_trades)
+        return sum(t["profit_loss"] for t in self.winning_trades)
 
     @property
     def total_loss(self) -> Cash:
-        return sum(t.profit_loss for t in self.losing_trades)
+        return sum(t["profit_loss"] for t in self.losing_trades)
 
     @property
     def win_loss_ratio(self) -> float:
@@ -127,8 +183,8 @@ class Portfolio:
 
     @property
     def profit_factor(self) -> float:
-        gross_profit = sum(t.profit_loss for t in self.winning_trades)
-        gross_loss = abs(sum(t.profit_loss for t in self.losing_trades))
+        gross_profit = sum(t["profit_loss"] for t in self.winning_trades)
+        gross_loss = abs(sum(t["profit_loss"] for t in self.losing_trades))
         if gross_loss == 0:
             return float("inf") if gross_profit > 0 else 0.0
         return gross_profit / gross_loss
@@ -140,7 +196,7 @@ class Portfolio:
     @property
     def avg_holding_period(self) -> Timestamp:
         return (
-            sum((t.holding_period for t in self._trades)) // len(self._trades)
+            sum(t["holding_period"] for t in self._trades) // len(self._trades)
             if self._trades
             else 0
         )
@@ -148,7 +204,7 @@ class Portfolio:
     @property
     def largest_win(self) -> Cash:
         return (
-            max(t.profit_loss for t in self.winning_trades)
+            max(t["profit_loss"] for t in self.winning_trades)
             if self.winning_trades
             else 0.0
         )
@@ -156,7 +212,7 @@ class Portfolio:
     @property
     def largest_loss(self) -> Cash:
         return (
-            min(t.profit_loss for t in self.losing_trades)
+            min(t["profit_loss"] for t in self.losing_trades)
             if self.losing_trades
             else 0.0
         )
@@ -165,7 +221,7 @@ class Portfolio:
     def max_consecutive_wins(self) -> int:
         max_wins = current_wins = 0
         for trade in self._trades:
-            if trade.is_winning:
+            if trade["is_winning"]:
                 current_wins += 1
                 max_wins = max(max_wins, current_wins)
             else:
@@ -176,7 +232,7 @@ class Portfolio:
     def max_consecutive_losses(self) -> int:
         max_losses = current_losses = 0
         for trade in self._trades:
-            if not trade.is_winning:
+            if not trade["is_winning"]:
                 current_losses += 1
                 max_losses = max(max_losses, current_losses)
             else:
@@ -185,7 +241,6 @@ class Portfolio:
 
     @property
     def expectancy(self) -> Cash:
-        """Expected profit per trade"""
         return self.net_profit / self.total_trades if self.total_trades else 0.0
 
     @property
@@ -200,9 +255,26 @@ class Portfolio:
             else 0.0
         )
 
-    def add_trade(self, trade: Trade) -> None:
+    def add_trade(
+        self,
+        order: OrderPayload,
+        current_price: Price,
+        exit_timestamp: Timestamp,
+    ) -> None:
+        assert order.quantity > 0, "Order must have positive quantity"
+
+        trade = self._calculate_trade_from_order(order, current_price)
+        trade["exit_time"] = exit_timestamp
+        trade["holding_period"] = exit_timestamp - order.timestamp
+
         self._trades.append(trade)
-        self.current_capital += trade.profit_loss
+        self.current_capital += trade["profit_loss"]
+
+    def add_trades(
+        self, trades: list[tuple[OrderPayload, Price, Timestamp]]
+    ) -> None:
+        for order, current_price, exit_timestamp in trades:
+            self.add_trade(order, current_price, exit_timestamp)
 
     def get_trading_metrics(self) -> TradingMetrics:
         return TradingMetrics(
@@ -224,3 +296,23 @@ class Portfolio:
             max_consecutive_losses=self.max_consecutive_losses,
             expectancy=self.expectancy,
         )
+
+    def get_trade_analysis(self) -> dict:
+        return {
+            "take_profit_trades": len(self.take_profit_trades),
+            "stop_loss_trades": len(self.stop_loss_trades),
+            "take_profit_rate": self.take_profit_rate,
+            "stop_loss_rate": self.stop_loss_rate,
+            "avg_take_profit_profit": self.avg_take_profit_profit,
+            "avg_stop_loss_loss": self.avg_stop_loss_loss,
+            "risk_reward_ratio": abs(
+                self.avg_take_profit_profit / self.avg_stop_loss_loss
+            )
+            if self.avg_stop_loss_loss != 0
+            else 0.0,
+        }
+
+    def clear(self) -> None:
+        self._trades.clear()
+        self.current_capital = self.initial_capital
+        self._daily_returns.clear()
