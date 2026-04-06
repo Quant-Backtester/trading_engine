@@ -7,6 +7,7 @@ from .strategy import Strategy
 from common.types import Quantity
 
 
+
 class DCA(Strategy):
     def __init__(self, buyframe: int, buy_amount: Quantity) -> None:
         self._buyframe: int = buyframe
@@ -19,8 +20,8 @@ class DCA(Strategy):
     def on_event(self, event: Event) -> Signal:
         currnet_time = event.timestamp
 
-        if self._should_buy(current_timestamp=currnet_time) and isinstance(
-            event.payload, MarketDataPayload
+        if isinstance(event.payload, MarketDataPayload) and self._should_buy(
+            current_timestamp=currnet_time
         ):
             self._last_buy_time = currnet_time
             return AddSignal(

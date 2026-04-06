@@ -171,7 +171,7 @@ class PositionManager:
         self._positions.pop(symbol, None)
         return closed
 
-    def get_net_position(self, symbol: Symbol) -> dict:
+    def get_net_position(self, symbol: Symbol) -> dict[str, float]:
         group = self._positions.get(symbol)
         if not group or group.total_quantity == 0:
             return {
@@ -185,7 +185,7 @@ class PositionManager:
             "quantity": group.total_quantity,
             "avg_price": group.avg_price,
             "current_price": group.price,
-            "unrealized_pnl": self._calculate_unrealized_pnl_for_group(group),
+            "unrealized_pnl": self._calculate_unrealized_pnl_for_group(group=group),
         }
 
     def _handle_take_profit(
@@ -240,7 +240,7 @@ class PositionManager:
 
         closed_positions = []
 
-        for order_id, position in list(position_group.positions.items()):
+        for _, position in list(position_group.positions.items()):
             current_price = position_group.price
 
             if tp_order := self._handle_take_profit(

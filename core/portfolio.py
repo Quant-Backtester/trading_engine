@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from events.payloads.order_payload import OrderFillPayload, OrderPayload
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, repr=True)
 class TradingMetrics:
     win_rate: Percentage
     profit_factor: float
@@ -257,24 +257,35 @@ class Portfolio:
 
     def add_trade(
         self,
-        order: OrderPayload,
+        order_fill: OrderFillPayload,
         current_price: Price,
         exit_timestamp: Timestamp,
     ) -> None:
-        assert order.quantity > 0, "Order must have positive quantity"
+        assert order_fill.order.quantity > 0, (
+            "Order must have positive quantity"
+        )
 
-        trade = self._calculate_trade_from_order(order, current_price)
+        trade = self._calculate_trade_from_order(
+            order_fill.order, current_price
+        )
         trade["exit_time"] = exit_timestamp
-        trade["holding_period"] = exit_timestamp - order.timestamp
+        trade["holding_period"] = exit_timestamp - order_fill.order.timestamp
 
         self._trades.append(trade)
         self.current_capital += trade["profit_loss"]
 
     def add_trades(
-        self, trades: list[tuple[OrderPayload, Price, Timestamp]]
+        self,
+        trades: list[OrderFillPayload],
+        current_price: Price,
+        exit_timestamp: Timestamp,
     ) -> None:
-        for order, current_price, exit_timestamp in trades:
-            self.add_trade(order, current_price, exit_timestamp)
+        for order in trades:
+            self.add_trade(
+                order_fill=order,
+                current_price=current_price,
+                exit_timestamp=exit_timestamp,
+            )
 
     def get_trading_metrics(self) -> TradingMetrics:
         return TradingMetrics(

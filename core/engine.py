@@ -4,7 +4,7 @@ import logging
 # Custom
 from core.strategy_handler import StrategyHandler
 from events.event import Event, MarketDataEvent, OrderFillEvent, TimerEvent
-from strategies.signal import Signal
+from events.event_dispatcher import EventDispatcher
 from .clock import Clock
 from .event_queue import EventQueue
 from .portfolio import Portfolio
@@ -12,7 +12,6 @@ from .order_manager import OrderManager
 from .position_manager import PositionManager
 from strategies import Strategy
 from common.types import Cash
-
 
 logger: logging.Logger = logging.getLogger("engine")
 
@@ -30,6 +29,14 @@ class Engine:
         self._portfolio = Portfolio(initial_capital=self._initial_cash)
         self._orderManager = OrderManager()
         self._positionManager = PositionManager(_cash=self._initial_cash)
+        self._event_dispatcher = EventDispatcher()
+        self.add_event_handlers()
+
+    def add_event_handlers(self) -> None:
+        self._event_dispatcher.register(
+            MarketDataEvent, self._fill_submitted_orders
+        )
+        self._event_dispatcher.register(MarketDataEvent, self._close_trades)
 
     def add_strategy(self, strategy: Strategy) -> bool:
         if state := self._strategy_handler.add_strategy(strategy=strategy):
@@ -57,21 +64,18 @@ class Engine:
 
             self._clock.advance_to(timestamp=event.timestamp)
 
-            self._handle_event(event=event)
+            self._event_dispatcher.dispatch(event=event)
 
             self._run_strategies(event=event)
-
         logger.info("engine stopped running")
 
-    def _handle_event(self, event: Event) -> None:
-        self._close_trades(event=event)
-
-        self._fill_submitted_orders(event=event)
-
-    def _close_trades(self, event: Event):
+    def _close_trades(self, event: MarketDataEvent):
         if closed_positions := self._positionManager.on_event(event=event):
-            self._portfolio.add_fills(closed_positions)
-            pass
+            self._portfolio.add_trades(
+                trades=closed_positions,
+                current_price=event.payload.price,
+                exit_timestamp=event.timestamp,
+            )
 
     def _fill_submitted_orders(self, event: Event):
         if orders := self._orderManager.on_event(event=event):
