@@ -203,7 +203,7 @@ class PositionManager:
             and current_price <= take_profit_price
         ):
             logger.info(
-                f"Stop loss triggered for order {order_id} at price {current_price}"
+                f"Take profit triggered for order {order_id} at price {current_price}"
             )
             return self.close_position(
                 symbol=position.order.symbol, order_id=order_id
