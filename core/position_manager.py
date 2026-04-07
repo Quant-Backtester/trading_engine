@@ -248,7 +248,7 @@ class PositionManager:
             ):
                 closed_positions.append(tp_order)
 
-            if sl_order := self._handle_take_profit(
+            if sl_order := self._handle_stop_loss(
                 current_price=current_price, position=position
             ):
                 closed_positions.append(sl_order)
