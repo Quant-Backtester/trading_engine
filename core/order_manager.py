@@ -30,7 +30,7 @@ class OrderManager:
             logger.info("order %s already exist.", order.order_id)
             return
         self._orders[order.order_id] = order
-        logger.info("order with OrderID: %s is setted", order.order_id)
+        logger.info("order with OrderID: %s is set", order.order_id)
 
     def on_market_data(
         self, data: MarketDataPayload
