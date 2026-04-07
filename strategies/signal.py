@@ -41,6 +41,6 @@ class ModifySignal(Signal):
 
 @dataclass(slots=True, frozen=True)
 class CloseSignal(Signal):
-    position_id: OrderId
+    order_id: OrderId
     quantity: Quantity | None = None
     reason: str | None = None

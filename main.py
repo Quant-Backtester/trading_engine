@@ -46,7 +46,7 @@ def config_engine_argument(
 
 
 def main() -> None:
-    """later on, the engine can be running in the memory (redis/vulkey)"""
+    """later on, the engine can be running in the memory (Redis/Vulkey)"""
     setup_engine_logging(level=logging.INFO)
     parser = argparse.ArgumentParser()
 
@@ -63,7 +63,7 @@ def main() -> None:
     args = parser.parse_args()
 
     engine = Engine(initial_cash=args.cash)
-    engine.add_strategy(strategy=DCA(buyframe=10,buy_amount=20))
+    engine.add_strategy(strategy=DCA(buyframe=10, buy_amount=20))
     replayer = MarketDataReplayer()
     if args.mode == "csv":
         replayer.set_market_data_source(
@@ -75,8 +75,6 @@ def main() -> None:
     elif args.mode == "json":
         # json handler
         pass
-
-
 
     replayer.replay(engine=engine, chunked=True)
 

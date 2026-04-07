@@ -67,6 +67,8 @@ class Engine:
             self._event_dispatcher.dispatch(event=event)
 
             self._run_strategies(event=event)
+        logger.info(self._portfolio.get_trading_metrics())
+        logger.info(self._portfolio.get_trade_analysis())
         logger.info("engine stopped running")
 
     def _close_trades(self, event: MarketDataEvent):
@@ -77,7 +79,7 @@ class Engine:
                 exit_timestamp=event.timestamp,
             )
 
-    def _fill_submitted_orders(self, event: Event):
+    def _fill_submitted_orders(self, event: Event) -> None:
         if orders := self._orderManager.on_event(event=event):
             self._positionManager.on_fill_sequence(fills=orders)
 

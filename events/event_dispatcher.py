@@ -1,6 +1,6 @@
 from collections import defaultdict
 from collections.abc import Callable
-from event import Event
+from .event import Event
 
 
 class EventDispatcher:

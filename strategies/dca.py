@@ -7,7 +7,6 @@ from .strategy import Strategy
 from common.types import Quantity
 
 
-
 class DCA(Strategy):
     def __init__(self, buyframe: int, buy_amount: Quantity) -> None:
         self._buyframe: int = buyframe
@@ -30,6 +29,8 @@ class DCA(Strategy):
                 price=event.payload.price,
                 symbol=event.payload.symbol,
                 quantity=self._buy_amount,
+                take_profit=event.payload.price + 20,
+                stop_loss=max(0.0, event.payload.price - 10),
             )
 
         return NullSignal()

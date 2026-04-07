@@ -16,15 +16,13 @@ logger = logging.getLogger("engine")
 @dataclass(slots=True)
 class SymbolPositionGroup:
     price: Price = 0.0
-    positions: MutableMapping[OrderId, OrderFillPayload] = field(
-        default_factory=dict
-    )
+    positions: dict[OrderId, OrderFillPayload] = field(default_factory=dict)
 
     def add_new_position(self, position: OrderFillPayload) -> None:
         self.positions[position.order.order_id] = position
 
     def remove_positon(self, order_id: OrderId) -> OrderFillPayload | None:
-        return self.positions.pop(order_id)
+        return self.positions.pop(order_id, None)
 
     @property
     def total_quantity(self) -> Quantity:
@@ -185,7 +183,9 @@ class PositionManager:
             "quantity": group.total_quantity,
             "avg_price": group.avg_price,
             "current_price": group.price,
-            "unrealized_pnl": self._calculate_unrealized_pnl_for_group(group=group),
+            "unrealized_pnl": self._calculate_unrealized_pnl_for_group(
+                group=group
+            ),
         }
 
     def _handle_take_profit(

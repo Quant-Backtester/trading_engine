@@ -1,6 +1,5 @@
 # STL
 import logging
-from dataclasses import dataclass
 from collections.abc import Iterator
 
 # external
@@ -29,7 +28,9 @@ class MarketDataReplayer:
 
     def _replay_in_chunk(self, engine: Engine) -> None:
         for chunk, chunk_num in self._generate_chunks():
-            self._process_chunk(engine=engine, chunk=chunk, chunk_number=chunk_num)
+            self._process_chunk(
+                engine=engine, chunk=chunk, chunk_number=chunk_num
+            )
 
     def _generate_chunks(self) -> Iterator[tuple[list[MarketDataPayload], int]]:
         buffer = []
@@ -50,7 +51,10 @@ class MarketDataReplayer:
             yield buffer, chunk_num
 
     def _process_chunk(
-        self, engine: Engine, chunk: list[MarketDataPayload], chunk_number: int
+        self,
+        engine: Engine,
+        chunk: list[MarketDataPayload],
+        chunk_number: int,
     ) -> None:
         logger.info(
             "Processing chunk %d with %d records", chunk_number, len(chunk)
@@ -68,7 +72,11 @@ class MarketDataReplayer:
 
         logger.info("Chunk %d completed", chunk_number)
 
-    def replay(self, engine: Engine, chunked: bool = True) -> None:
+    def replay(
+        self,
+        engine: Engine,
+        chunked: bool = True,
+    ) -> None:
         self.check_source()
 
         if chunked:
@@ -100,7 +108,7 @@ class MarketDataReplayer:
             payload=record,
         )
 
-        engine.push_event(event)
+        engine.push_event(event=event)
 
     @staticmethod
     def _validate_ordering(current_ts: int, last_ts: int | None) -> None:
