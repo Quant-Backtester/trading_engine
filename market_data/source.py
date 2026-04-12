@@ -92,8 +92,10 @@ class CSVMarketDataSource(ReprMixin, MarketDataSource):
 
 
 class DBMarketDataSource(ReprMixin, MarketDataSource):
+    __slots__ = ()
     pass
 
 
 class JsonMarketDataSource(ReprMixin, MarketDataPayload):
+    __slots__ = ()
     pass

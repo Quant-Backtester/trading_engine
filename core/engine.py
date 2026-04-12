@@ -17,6 +17,17 @@ logger: logging.Logger = logging.getLogger("engine")
 
 
 class Engine:
+    __slots__ = (
+        "_queue",
+        "_clock",
+        "_strategy_handler",
+        "_portfolio",
+        "_orderManager",
+        "_positionManager",
+        "_event_dispatcher",
+        "_initial_cash",
+    )
+
     def __init__(self, initial_cash: Cash = 100000) -> None:
         self._initial_cash = initial_cash
         self._setup()
@@ -36,7 +47,9 @@ class Engine:
         self._event_dispatcher.register(
             MarketDataEvent, self._fill_submitted_orders
         )
-        self._event_dispatcher.register(MarketDataEvent, self._close_trades)
+        self._event_dispatcher.register(
+            event_type=MarketDataEvent, callback=self._close_trades
+        )
 
     def add_strategy(self, strategy: Strategy) -> bool:
         if state := self._strategy_handler.add_strategy(strategy=strategy):

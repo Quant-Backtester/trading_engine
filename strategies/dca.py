@@ -8,6 +8,8 @@ from common.types import Quantity
 
 
 class DCA(Strategy):
+    __slots__ = "_buyframe", "_buy_amount", "_last_buy_time"
+
     def __init__(self, buyframe: int, buy_amount: Quantity) -> None:
         self._buyframe: int = buyframe
         self._buy_amount: Quantity = buy_amount

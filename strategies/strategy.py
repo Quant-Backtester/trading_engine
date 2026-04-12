@@ -4,10 +4,11 @@ from abc import ABC, abstractmethod
 
 # Custom
 from events.event import Event
+from trading_engine.common.mixins import ReprMixin
 from .signal import Signal
 
 
-class Strategy(ABC):
+class Strategy(ABC, ReprMixin):
     @abstractmethod
     def on_event(self, event: Event) -> Signal: ...
 
@@ -21,9 +22,3 @@ class Strategy(ABC):
 
     def __hash__(self) -> int:
         return hash(self.get_hash_key())
-
-    def __repr__(self) -> str:
-        return f"<{self.__class__}>"
-
-    def __str__(self) -> str:
-        return self.__class__.__name__

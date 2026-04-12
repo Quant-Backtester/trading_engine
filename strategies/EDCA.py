@@ -1,4 +1,3 @@
-
 from common.enums import OrderType, Side
 from common.types import Price, Quantity
 from events.event import Event
@@ -6,13 +5,27 @@ from events.payloads.market_payload import MarketDataPayload
 from strategies.signal import AddSignal, NullSignal, Signal
 from strategies.strategy import Strategy
 
+
 class EDCA(Strategy):
+    __slots__ = (
+        "_base_amount",
+        "_adjustment_amount",
+        "_buy_frequency",
+        "_lookback_periods",
+        "_last_buy_time",
+        "_last_price",
+        "_period_returns",
+        "_next_amount",
+        "_events_since_last_buy",
+        "_period_prices",
+    )
+
     def __init__(
         self,
         base_amount: Quantity,
         adjustment_amount: Quantity,
         buy_frequency: int = 1,
-        lookback_periods: int = 1
+        lookback_periods: int = 1,
     ) -> None:
         self._base_amount: Quantity = base_amount
         self._adjustment_amount: Quantity = adjustment_amount
@@ -26,9 +39,16 @@ class EDCA(Strategy):
         self._period_prices: list[Price] = []
 
     def get_hash_key(self) -> tuple[object, ...]:
-        return (self._base_amount, self._adjustment_amount, self._buy_frequency, self._lookback_periods)
+        return (
+            self._base_amount,
+            self._adjustment_amount,
+            self._buy_frequency,
+            self._lookback_periods,
+        )
 
-    def _calculate_period_return(self, current_price: Price, previous_price: Price) -> float:
+    def _calculate_period_return(
+        self, current_price: Price, previous_price: Price
+    ) -> float:
         return (current_price - previous_price) / previous_price
 
     def _determine_next_amount(self) -> Quantity:
@@ -64,7 +84,9 @@ class EDCA(Strategy):
 
         if len(self._period_prices) >= 2:
             previous_price = self._period_prices[0]
-            period_return = self._calculate_period_return(current_price, previous_price)
+            period_return = self._calculate_period_return(
+                current_price, previous_price
+            )
 
             if len(self._period_returns) >= self._lookback_periods:
                 self._period_returns.pop(0)
