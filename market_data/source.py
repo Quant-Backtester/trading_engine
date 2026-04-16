@@ -96,6 +96,6 @@ class DBMarketDataSource(ReprMixin, MarketDataSource):
     pass
 
 
-class JsonMarketDataSource(ReprMixin, MarketDataPayload):
+class JsonMarketDataSource(ReprMixin, MarketDataSource):
     __slots__ = ()
     pass

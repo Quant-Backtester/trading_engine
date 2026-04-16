@@ -157,9 +157,23 @@ class PositionManager:
     ) -> OrderFillPayload | None:
         group = self._positions.get(symbol)
         if group is None:
-            return
+            return None
 
-        return self._positions[symbol].remove_positon(order_id=order_id)
+        avg_price_before = group.avg_price
+        current_price = group.price
+
+        position = self._positions[symbol].remove_positon(order_id=order_id)
+        if position is None:
+            return None
+
+        realized = self._calculate_realized_pnl(
+            pos_qty=self._signed_quantity(position),
+            avg_price=avg_price_before,
+            closing_qty=position.fill_quantity,
+            fill_price=current_price,
+        )
+        self._realized_pnl += realized
+        return position
 
     def close_positions(self, symbol: Symbol) -> list[OrderFillPayload]:
         group = self._positions.get(symbol)
