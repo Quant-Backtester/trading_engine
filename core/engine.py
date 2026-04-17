@@ -11,6 +11,7 @@ from .portfolio import Portfolio
 from .order_manager import OrderManager
 from .position_manager import PositionManager
 from strategies import Strategy
+from strategies.signal import CloseSignal
 from common.types import Cash
 
 logger: logging.Logger = logging.getLogger("engine")
@@ -98,6 +99,18 @@ class Engine:
 
     def _run_strategies(self, event: Event) -> None:
         for signal in self._strategy_handler.run_all_strategy(event=event):
-            self._orderManager.handle_signal(
-                signal=signal, time=self._clock.now
-            )
+            if isinstance(signal, CloseSignal) and isinstance(event, MarketDataEvent):
+                closed = self._positionManager.close_position(
+                    symbol=event.payload.symbol,
+                    order_id=signal.order_id,
+                )
+                if closed:
+                    self._portfolio.add_trade(
+                        order_fill=closed,
+                        current_price=event.payload.price,
+                        exit_timestamp=self._clock.now,
+                    )
+            else:
+                self._orderManager.handle_signal(
+                    signal=signal, time=self._clock.now
+                )

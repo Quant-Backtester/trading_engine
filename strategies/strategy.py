@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 # Custom
 from events.event import Event
-from trading_engine.common.mixins import ReprMixin
+from common.mixins import ReprMixin
 from .signal import Signal
 
 

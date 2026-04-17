@@ -25,14 +25,15 @@ class DCA(Strategy):
             current_timestamp=currnet_time
         ):
             self._last_buy_time = currnet_time
+            price = event.payload.price
             return AddSignal(
                 side=Side.BUY,
                 type=OrderType.MARKET,
-                price=event.payload.price,
+                price=price,
                 symbol=event.payload.symbol,
                 quantity=self._buy_amount,
-                take_profit=event.payload.price + 20,
-                stop_loss=max(0.0, event.payload.price - 10),
+                take_profit=round(price * 1.05, 2),  # 5% above entry
+                stop_loss=round(price * 0.97, 2),    # 3% below entry
             )
 
         return NullSignal()

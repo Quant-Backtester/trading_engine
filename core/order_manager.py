@@ -6,7 +6,7 @@ from common.types import OrderId
 from events.event import Event, MarketDataEvent
 from common.enums import OrderType, Side
 from events.payloads import MarketDataPayload
-from strategies.signal import AddSignal, Signal
+from strategies.signal import AddSignal, CancelSignal, Signal
 
 
 type OrderMapping = MutableMapping[OrderId, OrderPayload]
@@ -79,6 +79,12 @@ class OrderManager:
                 )
             )
             self.order_id += 1
+        elif isinstance(signal, CancelSignal):
+            if signal.orderId in self._orders:
+                self.remove_order(order_id=signal.orderId)
+                logger.info("cancelled order %s", signal.orderId)
+            else:
+                logger.warning("CancelSignal: order %s not found", signal.orderId)
 
     def on_event(self, event: Event) -> Sequence[OrderFillPayload]:
         if isinstance(event, MarketDataEvent):
