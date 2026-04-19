@@ -183,6 +183,114 @@ class PositionManager:
         self._positions.pop(symbol, None)
         return closed
 
+    def close_position_fifo(
+        self,
+        symbol: Symbol,
+        quantity: Quantity | None = None,
+        fraction: float | None = None,
+    ) -> list[OrderFillPayload]:
+        """Close positions for ``symbol`` FIFO (oldest fill first).
+
+        When both ``quantity`` and ``fraction`` are ``None``, closes the
+        entire position group.  ``fraction`` is resolved against the group's
+        current ``total_quantity``; ``quantity`` wins if both are set.
+
+        Returns the list of fill payloads that were closed.  The last fill
+        is split if ``quantity`` lands inside it — the remainder stays open
+        under the same ``order_id`` with its ``fill_quantity`` reduced.
+
+        Updates ``_realized_pnl`` per closed slice using the group's
+        pre-close ``avg_price`` (consistent with ``close_position``).
+        """
+        group = self._positions.get(symbol)
+        if group is None:
+            return []
+
+        total_qty = group.total_quantity
+        if total_qty <= 0:
+            return []
+
+        # Target quantity to close. quantity wins over fraction; neither → all.
+        if quantity is not None:
+            target = float(quantity)
+        elif fraction is not None:
+            target = float(total_qty) * float(fraction)
+        else:
+            target = float(total_qty)
+
+        target = max(0.0, min(target, float(total_qty)))
+        if target <= 0.0:
+            return []
+
+        # Pre-close snapshot — realized-P&L math uses the avg price at the
+        # moment the signal fires, same as `close_position`.
+        avg_price_before = group.avg_price
+        current_price = group.price
+        closed: list[OrderFillPayload] = []
+        remaining_to_close = target
+
+        # FIFO by insertion order (Python dicts preserve it).
+        for order_id in list(group.positions.keys()):
+            if remaining_to_close <= 0:
+                break
+            fill = group.positions[order_id]
+            fill_qty = float(fill.fill_quantity)
+            if fill_qty <= 0:
+                continue
+
+            if fill_qty <= remaining_to_close + 1e-9:
+                # Full close of this fill.
+                closed_fill = group.remove_positon(order_id=order_id)
+                if closed_fill is None:
+                    continue
+                realized = self._calculate_realized_pnl(
+                    pos_qty=self._signed_quantity(closed_fill),
+                    avg_price=avg_price_before,
+                    closing_qty=closed_fill.fill_quantity,
+                    fill_price=current_price,
+                )
+                self._realized_pnl += realized
+                closed.append(closed_fill)
+                remaining_to_close -= fill_qty
+            else:
+                # Partial close — split the fill.  Emit a synthetic payload
+                # for the portion closed; replace the dict entry with a new
+                # frozen payload holding the unclosed remainder.
+                closed_qty = remaining_to_close
+                remaining_qty = fill_qty - closed_qty
+
+                from events.payloads import OrderFillPayload as _OFP
+                synthetic = _OFP(
+                    order=fill.order,
+                    fill_price=fill.fill_price,
+                    fill_quantity=closed_qty,
+                    remaining_quantity=fill.remaining_quantity,
+                    fill_timestamp=fill.fill_timestamp,
+                )
+                group.positions[order_id] = _OFP(
+                    order=fill.order,
+                    fill_price=fill.fill_price,
+                    fill_quantity=remaining_qty,
+                    remaining_quantity=fill.remaining_quantity,
+                    fill_timestamp=fill.fill_timestamp,
+                )
+
+                realized = self._calculate_realized_pnl(
+                    pos_qty=(1 if fill.order.side == Side.BUY else -1) * closed_qty,
+                    avg_price=avg_price_before,
+                    closing_qty=closed_qty,
+                    fill_price=current_price,
+                )
+                self._realized_pnl += realized
+                closed.append(synthetic)
+                remaining_to_close = 0.0
+
+        # Drop empty group so `total_quantity` stays clean.
+        if group.total_quantity <= 0:
+            self._positions.pop(symbol, None)
+
+        return closed
+
     def get_net_position(self, symbol: Symbol) -> dict[str, float]:
         group = self._positions.get(symbol)
         if not group or group.total_quantity == 0:

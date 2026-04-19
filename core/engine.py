@@ -100,13 +100,26 @@ class Engine:
     def _run_strategies(self, event: Event) -> None:
         for signal in self._strategy_handler.run_all_strategy(event=event):
             if isinstance(signal, CloseSignal) and isinstance(event, MarketDataEvent):
-                closed = self._positionManager.close_position(
-                    symbol=event.payload.symbol,
-                    order_id=signal.order_id,
-                )
-                if closed:
+                symbol = event.payload.symbol
+                # Three close modes:
+                #   order_id set      → close that specific fill (TP/SL path)
+                #   order_id None     → FIFO close honouring quantity/fraction,
+                #                        or full close when both are None
+                if signal.order_id is not None:
+                    closed = self._positionManager.close_position(
+                        symbol=symbol, order_id=signal.order_id,
+                    )
+                    closed_list = [closed] if closed else []
+                else:
+                    closed_list = self._positionManager.close_position_fifo(
+                        symbol=symbol,
+                        quantity=signal.quantity,
+                        fraction=signal.fraction,
+                    )
+
+                for fill in closed_list:
                     self._portfolio.add_trade(
-                        order_fill=closed,
+                        order_fill=fill,
                         current_price=event.payload.price,
                         exit_timestamp=self._clock.now,
                     )
