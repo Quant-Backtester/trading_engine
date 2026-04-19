@@ -132,21 +132,80 @@ class PositionManager:
         else:
             self._cash += trade_value
 
+    def _clamp_buy_fill_to_cash(
+        self, fill: OrderFillPayload
+    ) -> OrderFillPayload | None:
+        """Size a BUY fill down to what ``_cash`` can afford.
+
+        Returns the original fill if cash is sufficient, a new fill with
+        reduced ``fill_quantity`` when the strategy over-ordered, or
+        ``None`` when cash is non-positive (caller must skip the fill).
+
+        The engine previously let ``_cash`` go negative without bound,
+        which manifested in the UI as max-drawdown values below -100%
+        and phantom P/L on strategies like DCA that fire every bar. The
+        size-down policy matches DCA intuition — buy as much as you can
+        afford and drop the remainder — instead of rejecting the whole
+        order, which would stop the strategy dead on the first bar.
+        """
+        needed = fill.fill_quantity * fill.fill_price
+        if needed <= self._cash + 1e-9:
+            return fill
+
+        if self._cash <= 0 or fill.fill_price <= 0:
+            return None
+
+        affordable_qty = self._cash / fill.fill_price
+        if affordable_qty <= 0:
+            return None
+
+        logger.info(
+            "order %s clamped to cash: requested=%.6f affordable=%.6f "
+            "cash=%.2f price=%.2f",
+            fill.order.order_id,
+            fill.fill_quantity,
+            affordable_qty,
+            self._cash,
+            fill.fill_price,
+        )
+        return OrderFillPayload(
+            order=fill.order,
+            fill_timestamp=fill.fill_timestamp,
+            fill_price=fill.fill_price,
+            fill_quantity=affordable_qty,
+            remaining_quantity=fill.fill_quantity - affordable_qty,
+            commission=fill.commission,
+        )
+
     def on_fill(self, fill: OrderFillPayload) -> None:
         self._validate_fill(fill=fill)
 
         order = fill.order
+
+        # BUY orders must respect cash on hand — the ledger cannot go
+        # negative or downstream metrics (drawdown, return, vol) blow up.
+        if order.side == Side.BUY:
+            clamped = self._clamp_buy_fill_to_cash(fill)
+            if clamped is None:
+                logger.warning(
+                    "order %s skipped: insufficient cash (cash=%.2f, "
+                    "needed=%.2f)",
+                    order.order_id,
+                    self._cash,
+                    fill.fill_quantity * fill.fill_price,
+                )
+                return
+            fill = clamped
+
         symbol = order.symbol
-
         group = self._get_or_create_group(symbol=symbol)
-
         group.add_new_position(fill)
 
         self._apply_cash_update(
             side=order.side, qty=fill.fill_quantity, price=fill.fill_price
         )
 
-        logger.info("filled order %s", OrderFillPayload)
+        logger.info("filled order %s", fill)
 
     def on_fill_sequence(self, fills: Sequence[OrderFillPayload]) -> None:
         for fill in fills:
