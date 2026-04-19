@@ -232,6 +232,14 @@ class PositionManager:
             fill_price=current_price,
         )
         self._realized_pnl += realized
+        # Credit cash for the close proceeds. Without this the ledger
+        # stays at the post-buy balance (often ~0) and every subsequent
+        # BUY is rejected by _clamp_buy_fill_to_cash, making the engine
+        # silently flatline after the first round-trip.
+        close_side = Side.SELL if position.order.side == Side.BUY else Side.BUY
+        self._apply_cash_update(
+            side=close_side, qty=position.fill_quantity, price=current_price
+        )
         return position
 
     def close_positions(self, symbol: Symbol) -> list[OrderFillPayload]:
@@ -309,6 +317,16 @@ class PositionManager:
                     fill_price=current_price,
                 )
                 self._realized_pnl += realized
+                close_side = (
+                    Side.SELL
+                    if closed_fill.order.side == Side.BUY
+                    else Side.BUY
+                )
+                self._apply_cash_update(
+                    side=close_side,
+                    qty=closed_fill.fill_quantity,
+                    price=current_price,
+                )
                 closed.append(closed_fill)
                 remaining_to_close -= fill_qty
             else:
@@ -341,6 +359,14 @@ class PositionManager:
                     fill_price=current_price,
                 )
                 self._realized_pnl += realized
+                close_side = (
+                    Side.SELL if fill.order.side == Side.BUY else Side.BUY
+                )
+                self._apply_cash_update(
+                    side=close_side,
+                    qty=closed_qty,
+                    price=current_price,
+                )
                 closed.append(synthetic)
                 remaining_to_close = 0.0
 
