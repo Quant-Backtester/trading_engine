@@ -67,12 +67,12 @@ class Engine:
         self._queue.push(event=event)
 
     def run(self) -> None:
-        logger.info("engine started running")
+        logger.debug("engine started running")
         while len(self._queue) > 0:
             event: MarketDataEvent | OrderFillEvent | TimerEvent = (
                 self._queue.pop()
             )
-            logger.info(
+            logger.debug(
                 "Dispatching event: type=%s ts=%d", event, event.timestamp
             )
 
@@ -81,9 +81,9 @@ class Engine:
             self._event_dispatcher.dispatch(event=event)
 
             self._run_strategies(event=event)
-        logger.info(self._portfolio.get_trading_metrics())
-        logger.info(self._portfolio.get_trade_analysis())
-        logger.info("engine stopped running")
+        logger.debug(self._portfolio.get_trading_metrics())
+        logger.debug(self._portfolio.get_trade_analysis())
+        logger.debug("engine stopped running")
 
     def _close_trades(self, event: MarketDataEvent):
         if closed_positions := self._positionManager.on_event(event=event):
