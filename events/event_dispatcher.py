@@ -5,8 +5,8 @@ from .event import Event
 
 class EventDispatcher:
     def __init__(self) -> None:
-        self._handlers: defaultdict[type, list[Callable[...]]] = defaultdict(
-            list
+        self._handlers: defaultdict[type, list[Callable[..., object]]] = (
+            defaultdict(list)
         )
 
     def register(self, event_type: type, callback: Callable) -> None:

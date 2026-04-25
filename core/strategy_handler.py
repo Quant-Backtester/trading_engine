@@ -16,7 +16,7 @@ class StrategyHandler:
         self._strategies: Strategies = defaultdict(Strategy)
 
     def add_strategy(self, strategy: Strategy) -> bool:
-        key = hash(strategy)
+        key: int = hash(strategy)
         if key in self._strategies:
             return False
         self._strategies[key] = strategy

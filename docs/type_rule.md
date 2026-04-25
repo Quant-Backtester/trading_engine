@@ -10,3 +10,10 @@
 - Errors can be caught at type-check time only
 - You want zero runtime overhead
 - The value is internal and short-lived
+
+
+
+
+## Duck Typing
+- prefer duck typing over inheritance, as inheritance will add runtime overhead
+- Try to avoid inheritance if you are not using the `super()` function call

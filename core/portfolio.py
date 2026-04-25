@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from functools import cached_property
 
 from common.enums import Side
 from common.types import Percentage, Cash, Price, Timestamp
@@ -87,19 +88,19 @@ class Portfolio:
     def total_trades(self) -> int:
         return len(self._trades)
 
-    @property
+    @cached_property
     def winning_trades(self) -> list[dict]:
         return [t for t in self._trades if t["is_winning"]]
 
-    @property
+    @cached_property
     def losing_trades(self) -> list[dict]:
         return [t for t in self._trades if not t["is_winning"]]
 
-    @property
+    @cached_property
     def take_profit_trades(self) -> list[dict]:
         return [t for t in self._trades if t["exit_type"] == "take_profit"]
 
-    @property
+    @cached_property
     def stop_loss_trades(self) -> list[dict]:
         return [t for t in self._trades if t["exit_type"] == "stop_loss"]
 
@@ -137,14 +138,14 @@ class Portfolio:
             else 0.0
         )
 
-    @property
+    @cached_property
     def avg_win(self) -> Cash:
         winning = self.winning_trades
         if not winning:
             return 0.0
         return sum(t["profit_loss"] for t in winning) / len(winning)
 
-    @property
+    @cached_property
     def avg_loss(self) -> Cash:
         losing = self.losing_trades
         return (
@@ -153,35 +154,35 @@ class Portfolio:
             else 0.0
         )
 
-    @property
+    @cached_property
     def avg_take_profit_profit(self) -> Cash:
         tp_trades = self.take_profit_trades
         if not tp_trades:
             return 0.0
         return sum(t["profit_loss"] for t in tp_trades) / len(tp_trades)
 
-    @property
+    @cached_property
     def avg_stop_loss_loss(self) -> Cash:
         sl_trades = self.stop_loss_trades
         if not sl_trades:
             return 0.0
         return sum(t["profit_loss"] for t in sl_trades) / len(sl_trades)
 
-    @property
+    @cached_property
     def total_profit(self) -> Cash:
         return sum(t["profit_loss"] for t in self.winning_trades)
 
-    @property
+    @cached_property
     def total_loss(self) -> Cash:
         return sum(t["profit_loss"] for t in self.losing_trades)
 
-    @property
+    @cached_property
     def win_loss_ratio(self) -> float:
         if self.avg_loss == 0:
             return 0.0
         return abs(self.avg_win / self.avg_loss) if self.avg_loss != 0 else 0.0
 
-    @property
+    @cached_property
     def profit_factor(self) -> float:
         gross_profit = sum(t["profit_loss"] for t in self.winning_trades)
         gross_loss = abs(sum(t["profit_loss"] for t in self.losing_trades))
@@ -189,11 +190,11 @@ class Portfolio:
             return float("inf") if gross_profit > 0 else 0.0
         return gross_profit / gross_loss
 
-    @property
+    @cached_property
     def net_profit(self) -> Cash:
         return self.total_profit + self.total_loss
 
-    @property
+    @cached_property
     def avg_holding_period(self) -> Timestamp:
         return (
             sum(t["holding_period"] for t in self._trades) // len(self._trades)
@@ -201,7 +202,7 @@ class Portfolio:
             else 0
         )
 
-    @property
+    @cached_property
     def largest_win(self) -> Cash:
         return (
             max(t["profit_loss"] for t in self.winning_trades)
@@ -209,7 +210,7 @@ class Portfolio:
             else 0.0
         )
 
-    @property
+    @cached_property
     def largest_loss(self) -> Cash:
         return (
             min(t["profit_loss"] for t in self.losing_trades)
@@ -217,7 +218,7 @@ class Portfolio:
             else 0.0
         )
 
-    @property
+    @cached_property
     def max_consecutive_wins(self) -> int:
         max_wins = current_wins = 0
         for trade in self._trades:
@@ -228,7 +229,7 @@ class Portfolio:
                 current_wins = 0
         return max_wins
 
-    @property
+    @cached_property
     def max_consecutive_losses(self) -> int:
         max_losses = current_losses = 0
         for trade in self._trades:

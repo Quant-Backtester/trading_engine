@@ -3,12 +3,17 @@ from abc import ABC, abstractmethod
 
 
 # Custom
+from common.mixins import ReprMixin
 from events.event import Event
 from common.mixins import ReprMixin
 from .signal import Signal
 
 
+<<<<<<< Updated upstream
 class Strategy(ABC, ReprMixin):
+=======
+class Strategy(ReprMixin, ABC):
+>>>>>>> Stashed changes
     @abstractmethod
     def on_event(self, event: Event) -> Signal: ...
 

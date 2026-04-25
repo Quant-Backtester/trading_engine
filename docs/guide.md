@@ -8,7 +8,6 @@ These guidelines apply to all code under:
 - `events/`
 - `market_data/`
 - `strategy/`
-- `handlers/`
 
 The primary goals are:
 
@@ -27,11 +26,31 @@ The primary goals are:
 2. **Unidirectional dependencies**
    Dependencies must flow in this direction only:
 
-   ```
-   market_data → events → engine → handler + strategy
-   ```
+  ```mermaid
+graph LR
+    A[Market Data] -->|transform| B[Event]
+    B --> C[Event Queue]
+    C -->|push| D[Engine]
+    D --> E[Strategy]
+    E --> F{Market Order?}
+    F -->|Yes| G[Position Manager]
+    F -->|No| H[Order Manager]
+    H -->|fill| G
+    G -->|close| I[Portfolio]
+    I -->|return| J[Metrics]
 
-   No reverse imports.
+    style A fill:#bbdefb
+    style B fill:#bbdefb
+    style C fill:#fff9c4
+    style D fill:#e1bee7
+    style E fill:#c8e6c9
+    style F fill:#ffccbc
+    style G fill:#b2dfdb
+    style H fill:#b2dfdb
+    style I fill:#d1c4e9
+    style J fill:#d1c4e9
+```
+
 
 3. **Engine owns control flow**
    External components may inject events, but only the engine advances time and dispatches events.

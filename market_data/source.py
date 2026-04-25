@@ -18,16 +18,6 @@ class MarketDataSource[T: MarketDataPayload](Protocol):
     def __iter__(self) -> Iterator[T]: ...
 
 
-class FakeMarketDataSource(ReprMixin, MarketDataSource):
-    __slots__ = ("_records",)
-
-    def __init__(self, records):
-        self._records: Iterable = records
-
-    def __iter__(self):
-        return iter(self._records)
-
-
 class CSVMarketDataSource(ReprMixin, MarketDataSource):
     __slots__ = "_path", "_symbol"
     column_mappings = {

@@ -9,7 +9,7 @@ from collections.abc import Iterator
 from .source import MarketDataSource
 from events.payloads import MarketDataPayload
 from core.engine import Engine
-from events.event import Event, MarketDataEvent
+from events.event import MarketDataEvent
 
 
 logger = logging.getLogger("engine")

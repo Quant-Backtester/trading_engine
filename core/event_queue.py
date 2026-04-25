@@ -22,14 +22,6 @@ class EventQueue:
     def sequence_number(self) -> int:
         return self._sequence
 
-    @sequence_number.setter
-    def sequence_number(self) -> None:
-        raise AttributeError("sequence_number is read only")
-
-    @sequence_number.deleter
-    def sequence_number(self) -> None:
-        raise AttributeError("sequence_number cannot be deleted")
-
     def push(self, event: Event) -> None:
         entry = Entry(sequence=self._sequence, event=event)
         heapq.heappush(self._heap, entry)

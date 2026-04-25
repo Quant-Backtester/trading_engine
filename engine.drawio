@@ -1,0 +1,216 @@
+<mxfile host="65bd71144e">
+    <diagram name="Backtesting Full Flow" id="backtesting-full-flow">
+        <mxGraphModel dx="1094" dy="871" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="900" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="db-source" value="Database" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="70" y="30" width="110" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="user-input" value="User Input" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="299.99999999999994" y="35" width="110" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="or-node" value="OR" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+                    <mxGeometry x="210" y="40" width="40" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-db-or" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" parent="1" source="db-source" target="or-node" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-user-or" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" parent="1" source="user-input" target="or-node" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="market-source" value="MarketDataSource" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="165" y="140" width="130" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-or-source" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" parent="1" source="or-node" target="market-source" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="replayer" value="MarketDataReplayer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="360" y="140" width="130" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-source-replayer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" parent="1" source="market-source" target="replayer" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="transform" value="Transform to&#xa;MarketEvent" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+                    <mxGeometry x="550" y="140" width="120" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-replayer-transform" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" parent="1" source="replayer" target="transform" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="event-queue" value="Event Queue" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+                    <mxGeometry x="730" y="140" width="110" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-queue" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" parent="1" source="transform" target="event-queue" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="batch-pull" value="Batch Pull&#xa;(Continuous)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="940" y="200" width="110" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-batch" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" parent="1" source="event-queue" target="batch-pull" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="engine" value="Backtesting Engine" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" parent="1" vertex="1">
+                    <mxGeometry x="140" y="270" width="150" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-engine" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" parent="1" source="batch-pull" target="engine" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="strategies" value="Strategies" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="410" y="275" width="110" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-strategies" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" parent="1" source="engine" target="strategies" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="decision" value="Open Order?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+                    <mxGeometry x="640" y="270" width="100" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-decision" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" parent="1" source="strategies" target="decision" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="market-label" value="Market" style="text;html=1;strokeColor=none;fillColor=none;align=center;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="590" y="340" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-market" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" parent="1" source="decision" target="position-manager" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="630" y="360"/>
+                            <mxPoint x="340" y="360"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="limit-label" value="Limit" style="text;html=1;strokeColor=none;fillColor=none;align=center;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="710" y="340" width="60" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-limit" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" parent="1" source="decision" target="order-manager" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="740" y="365"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="position-manager" value="Position Manager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="400" width="140" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" style="edgeStyle=none;html=1;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="order-manager" target="check-fills">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="980" y="518"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="8" value="filed?" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="7">
+                    <mxGeometry x="-0.3474" y="2" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="order-manager" value="Order Manager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="910" y="340" width="140" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="check-fills" value="Check Fills&#xa;(OrderManager)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+                    <mxGeometry x="430" y="480" width="130" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-check-fills" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="check-fills" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="245" y="505"/>
+                        </Array>
+                        <mxPoint x="245" y="330" as="sourcePoint"/>
+                        <mxPoint x="400" y="505.0000000000002" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="check-closes" value="Check Closes&#xa;(PositionManager)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+                    <mxGeometry x="430" y="560" width="130" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-check-closes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="engine" target="check-closes" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="215" y="585"/>
+                        </Array>
+                        <mxPoint x="210" y="340" as="sourcePoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="filled-orders" value="Filled Orders" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="600" y="400" width="140" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-filled" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" parent="1" source="check-fills" target="filled-orders" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-filled-to-pm" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" parent="1" source="filled-orders" target="position-manager" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="600" y="440"/>
+                            <mxPoint x="600" y="440"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="closed-orders" value="Closed Orders" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="615" y="560" width="130" height="47.27" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-closed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" parent="1" source="check-closes" target="closed-orders" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="portfolio" value="Portfolio&#xa;(Update Metrics)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#b0e3e6;strokeColor=#0e8088;" parent="1" vertex="1">
+                    <mxGeometry x="1010" y="600" width="130" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-closed-portfolio" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="closed-orders" target="portfolio" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="800" y="560.0042857142857" as="sourcePoint"/>
+                        <mxPoint x="1065" y="601.2900000000002" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="1060" y="584"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="results-aggregator" value="Backtest Results Aggregator" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+                    <mxGeometry x="420" y="660" width="180" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-portfolio-results" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" parent="1" source="portfolio" target="results-aggregator" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="845" y="640"/>
+                            <mxPoint x="510" y="640"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="edge-pm-results" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" parent="1" source="position-manager" target="results-aggregator" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="310" y="640"/>
+                            <mxPoint x="450" y="640"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="result-types" value="Opened Trades / Closed Trades / Unclosed Trades / Performance Metrics" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+                    <mxGeometry x="650" y="660" width="220" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-types" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" parent="1" source="results-aggregator" target="result-types" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="final-db" value="Database&#xa;(Results Storage)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="1130" y="650.7199999999999" width="160" height="68.57" as="geometry"/>
+                </mxCell>
+                <mxCell id="edge-final-db" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" parent="1" source="result-types" target="final-db" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-box" value="Legend" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;align=left;verticalAlign=top;" parent="1" vertex="1">
+                    <mxGeometry x="1090" y="130" width="200" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-data" value="Data Source" style="rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="1100" y="150" width="80" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-market" value="Market Data" style="rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="1100" y="175" width="80" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-queue" value="Queue" style="shape=parallelogram;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+                    <mxGeometry x="1100" y="200" width="80" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-engine" value="Engine / Portfolio" style="rounded=1;fillColor=#b0e3e6;strokeColor=#0e8088;" parent="1" vertex="1">
+                    <mxGeometry x="1100" y="225" width="80" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend-manager" value="Managers" style="rounded=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="1100" y="250" width="80" height="20" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
