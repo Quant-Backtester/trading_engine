@@ -9,11 +9,7 @@ from common.mixins import ReprMixin
 from .signal import Signal
 
 
-<<<<<<< Updated upstream
-class Strategy(ABC, ReprMixin):
-=======
 class Strategy(ReprMixin, ABC):
->>>>>>> Stashed changes
     @abstractmethod
     def on_event(self, event: Event) -> Signal: ...
 
